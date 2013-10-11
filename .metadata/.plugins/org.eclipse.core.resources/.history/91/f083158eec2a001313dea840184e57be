@@ -1,0 +1,113 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+
+import derricp1.apps.navi.R;
+
+//import derricp1.test.R;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.widget.ImageView;
+import android.widget.Toast;
+import android.graphics.*;
+import android.graphics.Bitmap.Config;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.view.*;
+import android.media.*;
+
+public class DisplayActivity extends Activity {
+	
+	public final int LEVELS = 100; //Scaling factor for strength
+	public final int SIGNALS = 4; //number of signals used for the comparison
+	
+	public final int FLOORWIDTH = 190; //Floor height/width in feet
+	public final int FLOORHEIGHT = 124;
+	
+	//(0,0) is in top left corner
+	
+	public String[] ids; //ids of access points (rssids) we are using
+	
+	public int mapsize = 5; //How many nodes, read in from file (defaults now);
+	public double[] nodex;
+	public double[] nodey;
+	public int[] nodess1;
+	public int[] nodess2;
+	public int[] nodess3;
+	public int[] nodess4;
+	
+	public String[] rssids; //A copy of ids right now - when we cover multiple floor we'll need to expand this into every possible one we'd need to compare
+	
+	public double[] calcs; //calculated strength difference
+	
+    private ImageView imageView;
+    private Paint myPaint = new Paint();
+    private Paint BLUE = new Paint();
+    private Paint GREEN = new Paint();
+    SoundPool pool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
+    HashMap<Integer, Integer> soundsMap = new HashMap<Integer, Integer>();
+    
+    int S1;
+    int S2;
+    
+	int[] currsig = new int[SIGNALS];
+	int tests = 100;
+    
+    boolean success;
+    
+	int thisscan[] = new int[SIGNALS];
+	boolean interrupted = false;
+
+	int lastnode = -1;
+	int currnode = -1;
+	int nextnode = -1;
+
+    //Read in absolute coordinates of nodes
+	InputStream is = getResources().openRawResource(R.raw.nodelocs);
+	InputStreamReader isr = new InputStreamReader(is);
+	BufferedReader br = new BufferedReader(isr);
+	
+	//Let's derive a start node, now that all of the nodes have been read in.
+    int startnode = 0; //need to generate
+	//Lets generate neighbors from the next file
+	InputStream is2 = getResources().openRawResource(R.raw.neighbors);
+	InputStreamReader isr2 = new InputStreamReader(is2);
+	BufferedReader br2 = new BufferedReader(isr2);	
+	
+	//Work with it
+	int[] pathstarts;
+	int[] pathends;
+	int counting = 0;
+    int linecount = 0;
+
+    @SuppressLint("NewApi")
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(new LoadView (this));
+    }	
+    
+    static public class LoadView extends View {
+    	
+    	public LoadView(Context context) {
+    		super(context);
+    	}
+    	
+        @Override
+        protected void onDraw(Canvas canvas) {
+        	
+        } 
+        
+    }
+
+}

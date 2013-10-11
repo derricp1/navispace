@@ -1,0 +1,95 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+
+//import derricp1.test.R;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.support.v4.app.NavUtils;
+import android.widget.ImageView;
+import android.widget.Toast;
+import android.graphics.*;
+import android.graphics.Bitmap.Config;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.view.*;
+import android.media.*;
+
+public class DisplayActivity extends Activity {
+	
+	
+
+    @SuppressLint("NewApi")
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(new LoadView (this));
+    }	
+    
+    static public class LoadView extends View {
+    	
+    	public LoadView(Context context) {
+    		super(context);
+    	}
+    	
+        @Override
+        protected void onDraw(Canvas canvas) {
+	        //Determine scaling factor
+	        int imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
+	        float factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
+	        int nh = (int)(bitmap.getHeight()*factor);
+	        int nw = (int)(bitmap.getWidth()*factor);
+	        
+	        // Create a new bitmap with the scaling factor
+	        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
+	
+	        //Create another bitmap to draw on
+	        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.RGB_565);
+	        Canvas tempCanvas = new Canvas(tempBitmap);
+	        
+	        //Turn the canvas back to a new bitmap
+	        Bitmap linemap = Bitmap.createBitmap(nw, nh, Config.RGB_565);
+	        tempCanvas.setBitmap(linemap);
+	        //Works as we go
+	        
+	        myPaint.setColor(Color.BLACK);
+	        BLUE.setColor(Color.BLUE);
+	        GREEN.setColor(Color.GREEN);
+	        
+	        //Draw the image bitmap into the canvas
+	        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
+	        
+	        //Draw Lines
+	        for (int i=0; i<linecount; i++) {
+	        	float sx = scale((float)nodex[pathstarts[i]], FLOORWIDTH, nw);
+	        	float sy = scale((float)nodey[pathstarts[i]], FLOORHEIGHT, nh);
+	        	float ex = scale((float)nodex[pathends[i]], FLOORWIDTH, nw);
+	        	float ey = scale((float)nodey[pathends[i]], FLOORHEIGHT, nh);   	
+	        	tempCanvas.drawLine(sx, sy, ex, ey, myPaint);
+	        	
+	        	nextnode = pathends[0];
+	        }
+	        
+	        tempCanvas.drawCircle(scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw), scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
+	        
+	        //if (linecount > 1)
+	        	//tempCanvas.drawCircle( scale((float)nodex[pathends[linecount-1]], FLOORWIDTH, nw), scale((float)nodey[pathends[linecount-1]], FLOORHEIGHT, nh), 10, GREEN); //Draw Circle at end spot
+	        //else
+	        	tempCanvas.drawCircle( scale((float)nodex[pathends[0]], FLOORWIDTH, nw), scale((float)nodey[pathends[0]], FLOORHEIGHT, nh), 10, GREEN); //Draw Circle at end spot
+	
+	        //Attach the canvas to the ImageView
+	        this.imageView.setImageBitmap(linemap);        	
+        } 
+        
+    }
+
+}

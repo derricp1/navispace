@@ -1,0 +1,13 @@
+package derricp1.apps.navi;
+
+public class DisplayActivity {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

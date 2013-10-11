@@ -1,0 +1,29 @@
+import derricp1.apps.navi.LoadView;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.os.Bundle;
+import android.view.View;
+
+public class DisplayActivity {
+	
+    
+    static public class LoadView extends View {
+    	
+    }
+        public void onCreate(Bundle savedInstanceState) {
+	        super.onCreate(savedInstanceState);
+	        setContentView(new LoadView (this));
+        }
+    	
+    	public LoadView(Context context) {
+    		super(context);
+    	}
+    	
+        @Override
+        protected void onDraw(Canvas canvas) {
+        	
+        } 
+        
+    }
+
+}
