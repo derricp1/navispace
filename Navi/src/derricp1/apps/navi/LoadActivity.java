@@ -47,6 +47,7 @@ public class LoadActivity extends Activity {
 	public int[] nodess3;
 	public int[] nodess4;
 	
+	
 	public String[] rssids; //A copy of ids right now - when we cover multiple floor we'll need to expand this into every possible one we'd need to compare
 	
 	public double[] calcs; //calculated strength difference
@@ -69,6 +70,8 @@ public class LoadActivity extends Activity {
         //sound
         int S1 = 1;
         int S2 = 2;
+        int S3 = 3;
+        int S4 = 4;
         final SoundPool pool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
         final HashMap<Integer, Integer> soundsMap = new HashMap<Integer, Integer>();
         soundsMap.put(S1, pool.load(this, R.raw.left, 1));
@@ -78,18 +81,16 @@ public class LoadActivity extends Activity {
         Intent intent = getIntent();
         final int targetnode = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
         
-		final WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		boolean wasEnabled = myWifiManager.isWifiEnabled(); //Enables WiFi
+		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		boolean wasEnabled = myWifiManager.isWifiEnabled();
 		
-		if (!wasEnabled) {
+		if (wasEnabled == false) {
 			Toast.makeText(this, "Wifi Disabled. Please enable Wifi and try again.", Toast.LENGTH_SHORT).show();
-			finish();
+			finishAffinity();
 		}
 		
 		ids = new String[SIGNALS]; //The RSSIDs we want
 		rssids = new String[SIGNALS]; //Need to expand for more floors
-		final int[] currsig = new int[SIGNALS];
-		final int tests = 100;
 		
 		String[] s1 = new String[4];
 		String[] s2 = new String[4];
@@ -169,7 +170,6 @@ public class LoadActivity extends Activity {
 		
 		final int thisscan[] = new int[SIGNALS];
 		
-		//failed floor match
 		//0-233: floor 2
 		//234-383: floor 3
 		//384+: floor 4
@@ -182,12 +182,13 @@ public class LoadActivity extends Activity {
 			targetfloor = 4;
 		}
 		
-		boolean checking = true;
-		if (bestmatch != targetfloor && checking) {
+		if (bestmatch != targetfloor) { //doesn't seem to work?
 			String failstring = "Book at floor " + targetfloor + " Restart this app there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_SHORT).show();
-			finish();
+			finishAffinity();
 		}
+		
+		final int finalmatch = bestmatch;
 			
 		//Begin loop here
 		
@@ -196,13 +197,42 @@ public class LoadActivity extends Activity {
 			@Override
 			protected Void doInBackground(Void... arg0) {
 				
+				WifiManager myWifiManager2 = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+				boolean wasEnabled2 = myWifiManager2.isWifiEnabled();
+				
 				int lastnode = -1;
 				int currnode = -1;
 				int nextnode = -1;
 				boolean success = false;
 				
+				int[] currsig = new int[SIGNALS];
+				int tests = 100;
+				
 				int stickiness = 3;
 				int sticknode = -1; //node that's trying to be moved to
+				int stucknode = -1; //node we are "stuck" at
+				
+				//obstacles
+				int obs = 5;
+				double[] ox;
+				double[] oy;
+				double[] or;
+				int[] oends = new int[3]; //where the points at each end
+				
+				int[] fstarts = new int[3]; //where the floor node ranges lie.
+				int[] fends = new int[3]; //where the floor node ranges lie.
+				
+				//0-233: floor 2
+				//234-383: floor 3
+				//384+: floor 4
+				fstarts[0] = 0;
+				fends[0] = 233;
+				fstarts[1] = 234;
+				fends[1] = 383;
+				fstarts[2] = 384;
+				fends[2] = 999;
+				
+				
 				
 				//Let's try to get the info for where we are!
 				for(int i=0; i<SIGNALS; i++)
@@ -213,15 +243,15 @@ public class LoadActivity extends Activity {
 					for(int i=0; i<SIGNALS; i++)
 						thisscan[i] = -1;
 			
-					if (myWifiManager.isWifiEnabled()){ //Recheck WiFi availability, safety measure
+					if (wasEnabled2 == true){ //Recheck WiFi availability, safety measure
 						for(int z=0; z<tests; z++) {
 							
 							for(int i=0; i<SIGNALS; i++)
 								thisscan[i] = -1;
 							
-							if(myWifiManager.startScan()){ //Can we start?
+							if(myWifiManager2.startScan()){ //Can we start?
 								// List available APs
-								List<ScanResult> scans = myWifiManager.getScanResults();
+								List<ScanResult> scans = myWifiManager2.getScanResults();
 								if (scans != null && !scans.isEmpty()){
 									for (ScanResult scan : scans) {
 										int found = -1;
@@ -270,7 +300,7 @@ public class LoadActivity extends Activity {
 						str = br.readLine(); //Discards hash
 					} 
 					catch (IOException e) {
-						finish(); //should not reach here
+						finishAffinity(); //should not reach here
 					}
 					
 					try { //Read in strength and location data
@@ -293,17 +323,66 @@ public class LoadActivity extends Activity {
 						}
 					} 
 					catch (IOException e) {
-						finish(); //should not reach here either
+						finishAffinity(); //should not reach here either
 					}
 					
+					//read in obstacles
+					InputStream isb = getResources().openRawResource(R.raw.obs);
+					InputStreamReader isrb = new InputStreamReader(isb);
+					BufferedReader brb = new BufferedReader(isrb);					
+					
+					try {
+						String str = brb.readLine(); //Reads the number of obstacles and the end index per floor
+						obs = Integer.parseInt(str);
+						str = brb.readLine();
+						oends[0] = Integer.parseInt(str);
+						str = brb.readLine();
+						oends[1] = Integer.parseInt(str);
+						oends[2] = obs-1;
+						str = brb.readLine(); //Discards hash
+					} 
+					catch (IOException e) {
+						finishAffinity(); //should not reach here
+					}
+					
+					ox = new double[obs];
+					oy = new double[obs];
+					or = new double[obs];
+					
+					try { //Read in location data for obstacles
+						for (int i=0; i< obs; i++) {
+							String str = brb.readLine(); //Reads in data
+							ox[i] = Double.parseDouble(str);
+							str = brb.readLine(); //Reads in data
+							oy[i] = Double.parseDouble(str);
+							str = brb.readLine(); //Reads in data
+							or[i] = Double.parseDouble(str);
+							
+							str = brb.readLine(); //Discards hash
+			
+						}
+					} 
+					catch (IOException e) {
+						finishAffinity(); //should not reach here either
+					}					
+					
+					//Location determination starts here...
+
 					//Let's derive a start node, now that all of the nodes have been read in.
 			
 			        int startnode = 0; //need to generate
 			        double calcs[] = new double[mapsize];
 			        
+			        boolean newstep = false; //did we change positions?
+			        
 			        //Currsig[0-2] is our signal, nodess1-3 is the signal strength of each node 0 to n-1 
 					for(int i=0; i<mapsize; i++) {
-						calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
+						if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
+							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
+						}
+						else
+							calcs[i] = 9999999; //don't consider if not on the floor.
+						
 					}        
 			        //Calculate closest distance (above)
 					
@@ -319,22 +398,38 @@ public class LoadActivity extends Activity {
 						}
 					}
 					
-					if (sticknode == -1) {
-						stickiness = 3;
+					if (stucknode == -1) { //if first run, set sticking point, where one is
+						stickiness = 2;
 						startnode = closestnode;
-						sticknode = startnode;
-					}
-					else if (closestnode == sticknode) {
-						stickiness--;
-						if (stickiness == 0) {
-							startnode = closestnode;
-							stickiness = 3;
-						}
+						stucknode = closestnode;
+						sticknode = -1;
+						newstep = true;
 					}
 					else {
-						stickiness = 3;
-						sticknode = closestnode;
+						if (sticknode == -1) { 
+							sticknode = closestnode;
+							stickiness = 2;
+						}
+						else {
+							if (closestnode == sticknode) { //If tests match, iterate towards updating location
+								stickiness--;
+								if (stickiness == 0) {
+									startnode = closestnode;
+									stucknode = closestnode;
+									sticknode = -1;
+									stickiness = 2;
+									newstep = true;
+								}								
+							}
+							else { //reset
+								sticknode = closestnode;
+								stickiness = 2;
+							}
+						}
 					}
+					
+					//set the current location
+					startnode = stucknode;
 					
 					//set for voice
 					currnode = startnode;
@@ -352,7 +447,7 @@ public class LoadActivity extends Activity {
 						str = br2.readLine(); //Discards hash
 					} 
 					catch (IOException e) {
-						finish(); //should not reach here
+						finishAffinity(); //should not reach here
 					}
 					
 					EdgeWeightedDigraph dg = new EdgeWeightedDigraph(mapsize);
@@ -375,7 +470,7 @@ public class LoadActivity extends Activity {
 						}
 					} 
 					catch (IOException e) {
-						finish(); //should not reach here either
+						finishAffinity(); //should not reach here either
 					}		
 					
 					//Create Map with this info
@@ -464,14 +559,13 @@ public class LoadActivity extends Activity {
 			        //try to play sound
 			        boolean left = false;
 			        boolean right = false;
-
-			        
+ 
 			        //nodex, nodey
-			        if (currnode > -1 && nextnode > -1 && lastnode > -1) {
-				        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode])) {
+			        if (currnode > -1 && nextnode > -1 && lastnode > -1 && newstep == true) {
+				        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode])) {
 				        	left = true;
 				        }
-				        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode])) {
+				        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode])) {
 				        	right = true;
 				        }
 			        }
@@ -492,8 +586,34 @@ public class LoadActivity extends Activity {
 			            pool.play(soundsMap.get(2), volume, volume, 1, 0, 1); 	        	
 			        }
 			        
+			        if (!left && !right) { //if no turns, check for obstacles
+			        	
+			        	int ostart = 0;
+			        	//oends[bestmatch-2]
+			        	if (finalmatch > 2) {
+			        		ostart = oends[finalmatch-3] + 1;
+			        	}
+			        	
+			        	for (int i=0; i<obs; i++) {
+			        		if (realDistance(nodex[currnode], nodey[currnode], ox[i], oy[i]) < or[i] && i >= ostart && i <= oends[finalmatch-2]) {
+			        			//obstacle!
+			        			//check left/right and stuff
+						        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
+						        	//sidestep left
+						        	break;
+						        }
+						        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] >= ox[i])) {
+						        	//sidestep left
+						        	break;
+						        }	
+			        		}
+			        	}
+			        }
+			        
+  
+			        
 			        try {
-			            Thread.sleep(1000);
+			            Thread.sleep(250); //quarter second steps
 			        } 
 			        catch (InterruptedException e) {
 			        	e.printStackTrace();
@@ -547,6 +667,12 @@ public class LoadActivity extends Activity {
     	float scaleloc = (float)((inloc/inmax)*indim);
     	
     	return scaleloc;
+    	
+    }
+    
+    public double realDistance(double cx, double cy, double ox, double oy) {
+    	
+    	return Math.sqrt((Math.abs(cx-ox)*Math.abs(cx-ox)) + (Math.abs(cy-oy)*Math.abs(cy-oy)));
     	
     }
     

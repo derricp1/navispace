@@ -5,12 +5,44 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
-    <EditText
-        android:id="@+id/input_message"
+    <TableLayout
         android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_weight="1"
-        android:hint="@string/input_message" />
+        android:layout_height="match_parent"
+        android:layout_weight="0.47" >
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <EditText
+                android:id="@+id/input_message"
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="1"
+                android:hint="@string/input_message" >
+
+                <requestFocus />
+            </EditText>
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_gravity="fill_vertical"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/logo" />
+
+        </TableRow>
+    </TableLayout>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="100dp"
