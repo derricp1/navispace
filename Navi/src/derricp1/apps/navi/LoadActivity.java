@@ -75,7 +75,9 @@ public class LoadActivity extends Activity {
         final SoundPool pool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
         final HashMap<Integer, Integer> soundsMap = new HashMap<Integer, Integer>();
         soundsMap.put(S1, pool.load(this, R.raw.left, 1));
-        soundsMap.put(S2, pool.load(this, R.raw.right, 1));	 
+        soundsMap.put(S2, pool.load(this, R.raw.right, 1));
+        soundsMap.put(S3, pool.load(this, R.raw.s3, 1));
+        soundsMap.put(S4, pool.load(this, R.raw.s4, 1));
 
         // Get the message from the intent
         Intent intent = getIntent();
@@ -135,7 +137,7 @@ public class LoadActivity extends Activity {
 			}				
 		}
 		
-		int bestmatch = 4;
+		int bestmatch = 4; 
 		if (ticker[0] >= ticker[1] && ticker[0] >= ticker[2]) {
 			bestmatch = 2;
 		}
@@ -182,7 +184,14 @@ public class LoadActivity extends Activity {
 			targetfloor = 4;
 		}
 		
-		if (bestmatch != targetfloor) { //doesn't seem to work?
+		//if none, error
+		if (ticker[0] + ticker[1] + ticker[2] == 0) {
+			String failstring = "Book at floor " + targetfloor + " Restart this app there.";
+			Toast.makeText(this, failstring, Toast.LENGTH_SHORT).show();
+			finishAffinity();			
+		}
+		
+		if (bestmatch != targetfloor) {
 			String failstring = "Book at floor " + targetfloor + " Restart this app there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_SHORT).show();
 			finishAffinity();
@@ -379,9 +388,13 @@ public class LoadActivity extends Activity {
 					for(int i=0; i<mapsize; i++) {
 						if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
+							//scale by distance from last node - the further you are from the last node, the less chance you are there
+							if (lastnode > -1) {
+								calcs[i] = calcs[i]*Math.sqrt(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]));
+							}
 						}
 						else
-							calcs[i] = 9999999; //don't consider if not on the floor.
+							calcs[i] = -1; //don't consider if not on the floor.
 						
 					}        
 			        //Calculate closest distance (above)
@@ -393,7 +406,7 @@ public class LoadActivity extends Activity {
 					int closestnode = 0; //the candidate for switching
 					
 					for(int i=0; i<mapsize; i++) {
-						if (calcs[i] < calcs[closestnode]) { //Pick nearest neighbor
+						if (calcs[i] < calcs[closestnode] && calcs[i] > -1) { //Pick nearest neighbor
 							closestnode = i;
 						}
 					}
@@ -526,7 +539,7 @@ public class LoadActivity extends Activity {
 			        // Create a new bitmap with the scaling factor
 			        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
 			
-			        //Create another bitmpa to draw on
+			        //Create another bitmap to draw on
 			        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.RGB_565);
 			        Canvas tempCanvas = new Canvas(tempBitmap);
 			        
@@ -553,8 +566,18 @@ public class LoadActivity extends Activity {
 			        	nextnode = pathends[0];
 			        }
 			        
+			        //do again for crown
+			        
+			        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
+			        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
+			        int imgh = (int)(imgmap.getHeight()*factor);
+			        int imgw = (int)(imgmap.getWidth()*factor);
+			        
+			        Bitmap newimgmap = Bitmap.createScaledBitmap(imgmap, imgw, imgh, false);
+			        
+			        //Draw full map
 			        tempCanvas.drawCircle(scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw), scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
-			        tempCanvas.drawCircle(scale((float)nodex[pathends[0]], FLOORWIDTH, nw), scale((float)nodey[pathends[0]], FLOORHEIGHT, nh), 10, GREEN); //Draw Circle at end spot
+			        tempCanvas.drawBitmap(newimgmap, (scale((float)nodex[pathends[0]], FLOORWIDTH, nw) - (imgw/2)), (scale((float)nodey[pathends[0]], FLOORHEIGHT, nh) - (imgh/2)), GREEN);
 			        
 			        //try to play sound
 			        boolean left = false;
@@ -599,11 +622,21 @@ public class LoadActivity extends Activity {
 			        			//obstacle!
 			        			//check left/right and stuff
 						        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
-						        	//sidestep left
+						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+						            float volume = streamVolumeCurrent / streamVolumeMax;  
+
+						            pool.play(soundsMap.get(3), volume, volume, 1, 0, 1);  
 						        	break;
 						        }
 						        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] >= ox[i])) {
-						        	//sidestep left
+						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+						            float volume = streamVolumeCurrent / streamVolumeMax;  
+
+						            pool.play(soundsMap.get(4), volume, volume, 1, 0, 1);  
 						        	break;
 						        }	
 			        		}
