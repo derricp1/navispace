@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">NAVI</string>
+    <string name="app_name">TCNJ BOOKNAV</string>
     <string name="input_message">Enter a Call Number</string>
     <string name="button_send">Send</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_load">LoadActivity</string>
     <string name="action_settings">Settings</string>
+    <string name="toggle_in">Zoomed In</string>
+    <string name="toggle_out">Zoomed Out</string>
 
 </resources>

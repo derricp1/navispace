@@ -46,8 +46,7 @@ public class LoadActivity extends Activity {
 	public int[] nodess2;
 	public int[] nodess3;
 	public int[] nodess4;
-	
-	
+		
 	public String[] rssids; //A copy of ids right now - when we cover multiple floor we'll need to expand this into every possible one we'd need to compare
 	
 	public double[] calcs; //calculated strength difference
@@ -82,6 +81,7 @@ public class LoadActivity extends Activity {
         // Get the message from the intent
         Intent intent = getIntent();
         final int targetnode = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
+        final boolean ztog = intent.getBooleanExtra(Main.ZOOM_LEVEL, false);
         
 		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		boolean wasEnabled = myWifiManager.isWifiEnabled();
@@ -390,7 +390,7 @@ public class LoadActivity extends Activity {
 							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
 							//scale by distance from last node - the further you are from the last node, the less chance you are there
 							if (lastnode > -1) {
-								calcs[i] = calcs[i]*Math.sqrt(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]));
+								calcs[i] = calcs[i]*Math.sqrt(Math.log(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])));
 							}
 						}
 						else
@@ -412,16 +412,16 @@ public class LoadActivity extends Activity {
 					}
 					
 					if (stucknode == -1) { //if first run, set sticking point, where one is
-						stickiness = 2;
+						stickiness = 4;
 						startnode = closestnode;
 						stucknode = closestnode;
 						sticknode = -1;
 						newstep = true;
 					}
 					else {
-						if (sticknode == -1) { 
+						if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
 							sticknode = closestnode;
-							stickiness = 2;
+							stickiness = 4;
 						}
 						else {
 							if (closestnode == sticknode) { //If tests match, iterate towards updating location
@@ -436,7 +436,7 @@ public class LoadActivity extends Activity {
 							}
 							else { //reset
 								sticknode = closestnode;
-								stickiness = 2;
+								stickiness = 4;
 							}
 						}
 					}
@@ -527,30 +527,47 @@ public class LoadActivity extends Activity {
 			        		drawable = getResources().getDrawable(R.drawable.f4);
 			        		break; //this will be for 4, the only other choice
 			        }
-			        		
+			        
+			        double mult = 1;
+			        if (ztog)
+			        	mult = 1.5;
+			        
 			        Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
 			
 			        //Determine scaling factor
 			        int imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
 			        float factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
-			        int nh = (int)(bitmap.getHeight()*factor);
-			        int nw = (int)(bitmap.getWidth()*factor);
+			        
+			        int nh = (int)(bitmap.getHeight()*factor*mult);
+			        int nw = (int)(bitmap.getWidth()*factor*mult);
+			        
+			        
 			        
 			        // Create a new bitmap with the scaling factor
+			        //zoom the drawable if zoom option is on
 			        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
 			
 			        //Create another bitmap to draw on
-			        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.RGB_565);
+			        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
 			        Canvas tempCanvas = new Canvas(tempBitmap);
 			        
 			        //Turn the canvas back to a new bitmap
-			        Bitmap linemap = Bitmap.createBitmap(nw, nh, Config.RGB_565);
+			        Bitmap linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
 			        tempCanvas.setBitmap(linemap);
 			        //Works as we go
+		        
+			        /*
+			        Bitmap linemap = Bitmap.createScaledBitmap(bitmap, nw*mult, nh*mult, false);
+			        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw*mult, nh*mult, false);
+			        Canvas tempCanvas = new Canvas(linemap);
+			        */
+			        
 			        
 			        myPaint.setColor(Color.BLACK);
 			        BLUE.setColor(Color.BLUE);
 			        GREEN.setColor(Color.GREEN);
+			        
+			        myPaint.setStrokeWidth((float) (10*mult)); //make the lines bigger, will only affect the directional lines
 			        
 			        //Draw the image bitmap into the canvas
 			        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
@@ -570,8 +587,8 @@ public class LoadActivity extends Activity {
 			        
 			        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
 			        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
-			        int imgh = (int)(imgmap.getHeight()*factor);
-			        int imgw = (int)(imgmap.getWidth()*factor);
+			        int imgh = (int)(imgmap.getHeight()*factor*mult);
+			        int imgw = (int)(imgmap.getWidth()*factor*mult);
 			        
 			        Bitmap newimgmap = Bitmap.createScaledBitmap(imgmap, imgw, imgh, false);
 			        

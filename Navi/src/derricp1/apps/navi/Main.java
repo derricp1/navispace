@@ -5,16 +5,23 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+
 import java.io.*;
+import java.util.Locale;
 
 public class Main extends Activity {
 	
 	public final static String EXTRA_MESSAGE = "derricp1.apps.MESSAGE"; //Message to display to user
+	public final static String ZOOM_LEVEL = "derricp1.apps.MESSAGE";
 	public int rangesize = 455; //number of ranges (node sets) - Needs to be changed to strings due to call numbers
 	public String[] lo; //ranges
 	public String[] hi; //ranges
+	
+	public boolean zlevel = false;
 	
 	//May need to change into having 3 arrays, one with node translations to a range, in addition to hi and lo
 	
@@ -69,7 +76,7 @@ public class Main extends Activity {
 	    	//If in range, carry on
 	    	boolean success = false;
 			for (int i=0; i< rangesize; i++) {
-				if (isbn.compareTo(lo[i]) >= 0 && isbn.compareTo(hi[i]) <= 0) { //Needs to be changed to call numbers and compareTo for strings (of course)
+				if (isbn.compareTo(lo[i].toUpperCase(Locale.getDefault())) >= 0 && isbn.compareTo(hi[i].toUpperCase(Locale.getDefault())) <= 0) { //Needs to be changed to call numbers and compareTo for strings (of course)
 					success = true;
 					target = i;
 				}
@@ -78,6 +85,7 @@ public class Main extends Activity {
 	    	
 	    	if (success) { //Will fail if user enters an invalid ISBN
 			    intent.putExtra(EXTRA_MESSAGE, target); //Places the id number of the node of the shelf where the ISBN would be
+			    intent.putExtra(ZOOM_LEVEL, zlevel);
 			    startActivity(intent);
 	    	}
 	    	else {
@@ -89,6 +97,14 @@ public class Main extends Activity {
 	    	Toast.makeText(this, "Please Enter an ISBN", Toast.LENGTH_SHORT).show();
 	    }
 	}
+	
+    public void zup(View v) {
+    	ToggleButton but = (ToggleButton) findViewById(R.id.toggleButton1);
+    	if (but.isChecked())
+    		zlevel = true;
+    	else
+    		zlevel = false;
+    }
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
