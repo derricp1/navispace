@@ -390,7 +390,7 @@ public class LoadActivity extends Activity {
 							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
 							//scale by distance from last node - the further you are from the last node, the less chance you are there
 							if (lastnode > -1) {
-								calcs[i] = calcs[i]*Math.sqrt(Math.log(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])));
+								calcs[i] = calcs[i]+realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]); //additive heuristic
 							}
 						}
 						else
@@ -412,7 +412,7 @@ public class LoadActivity extends Activity {
 					}
 					
 					if (stucknode == -1) { //if first run, set sticking point, where one is
-						stickiness = 4;
+						stickiness = 2;
 						startnode = closestnode;
 						stucknode = closestnode;
 						sticknode = -1;
@@ -421,7 +421,7 @@ public class LoadActivity extends Activity {
 					else {
 						if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
 							sticknode = closestnode;
-							stickiness = 4;
+							stickiness = 2;
 						}
 						else {
 							if (closestnode == sticknode) { //If tests match, iterate towards updating location
@@ -436,7 +436,7 @@ public class LoadActivity extends Activity {
 							}
 							else { //reset
 								sticknode = closestnode;
-								stickiness = 4;
+								stickiness = 2;
 							}
 						}
 					}

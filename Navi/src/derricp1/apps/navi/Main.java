@@ -21,6 +21,9 @@ public class Main extends Activity {
 	public String[] lo; //ranges
 	public String[] hi; //ranges
 	
+	public int[] lonum;
+	public int[] hinum;
+	
 	public boolean zlevel = false;
 	
 	//May need to change into having 3 arrays, one with node translations to a range, in addition to hi and lo
@@ -30,6 +33,8 @@ public class Main extends Activity {
 	/** Called when the user clicks the Send button */
 	public void sendMessage(View view) {
 
+		/*
+		
 	    Intent intent = new Intent(this, LoadActivity.class); //Makes an intent to pass the user's node
 	    EditText editText = (EditText) findViewById(R.id.input_message);
 	    //String message = editText.getText().toString();
@@ -39,6 +44,7 @@ public class Main extends Activity {
 	    if (cs != null && cs.length() > 0) {
 	    	
 	    	if (loaded == false) {
+	    		
 				//Load range file
 	    		InputStream is = getResources().openRawResource(R.raw.range);				
 				InputStreamReader isr = new InputStreamReader(is);
@@ -71,19 +77,169 @@ public class Main extends Activity {
 					finish(); //should not reach here either
 				}
 	    	}
+	    	
+	    	int lowcomp = 0;
+	    	int hicomp = 0;
 
 	    	//Compare ranges to ISBN
 	    	//If in range, carry on
 	    	boolean success = false;
-			for (int i=0; i< rangesize; i++) {
-				if (isbn.compareTo(lo[i].toUpperCase(Locale.getDefault())) >= 0 && isbn.compareTo(hi[i].toUpperCase(Locale.getDefault())) <= 0) { //Needs to be changed to call numbers and compareTo for strings (of course)
+			for (int i=0; i<rangesize; i++) { //needs to be fixed, doesn't handle numbers and such correctly
+				lowcomp = isbn.compareTo(lo[i]);
+				hicomp = isbn.compareTo(hi[i]);
+				if (lowcomp >= 0 && hicomp <= 0) {
 					success = true;
 					target = i;
 				}
 				
-			}	    	
+			}
+			
+			*/
+		
+	    Intent intent = new Intent(this, LoadActivity.class); //Makes an intent to pass the user's node
+	    EditText editText = (EditText) findViewById(R.id.input_message);
+	    //String message = editText.getText().toString();
+	    String isbn = editText.getText().toString();
+	    
+	    String isbnchars = ""; //splitting of the isbn
+	    int isbnnums = -1;
+	    
+	    int breakpoint = 0;
+	    char[] chararray = isbn.toCharArray();
+	    for (int q=0; q<isbn.length(); q++) {
+	    	if (isbnchars == "" && Character.isDigit(chararray[q]) == true) {
+	    		isbnchars = isbn.substring(0,q);
+	    		breakpoint = q;
+	    	}
+	    	if (isbnchars != "" && isbnnums == -1) {
+	    		if (q == isbn.length() - 1 && isbnnums == -1) { //last character
+	    			String tempstr = (isbn.substring(breakpoint,q+1));
+		    		if (tempstr.length() > 0 && Character.isDigit(chararray[q]) == true)
+		    			isbnnums = Integer.parseInt(tempstr);
+	    		}
+	    		if (Character.isDigit(chararray[q]) == false && isbnnums == -1) { //not a number anymore
+		    		String tempstr = (isbn.substring(breakpoint,q));
+		    		if (tempstr.length() > 0)
+		    			isbnnums = Integer.parseInt(tempstr);	    			
+	    		}
+	    	}
+	    }
+	    
+	    
+	    int target = 0;
+	    CharSequence cs = editText.getText();
+	    if (cs != null && cs.length() > 0) {
 	    	
-	    	if (success) { //Will fail if user enters an invalid ISBN
+	    	if (loaded == false) {
+	    		
+				//Load range file
+	    		InputStream is = getResources().openRawResource(R.raw.range);				
+				InputStreamReader isr = new InputStreamReader(is);
+				BufferedReader br = new BufferedReader(isr);
+				
+				try {
+					String str = br.readLine(); //Reads the range size
+					rangesize = Integer.parseInt(str);
+					str = br.readLine(); //Discards hash
+					lo = new String[rangesize];
+					hi = new String[rangesize];
+					lonum = new int[rangesize];
+					hinum = new int[rangesize];
+				} 
+				catch (IOException e) {
+					finish(); //should not reach here
+				}
+
+				//sets pairs of numbers to range
+				try {
+					for (int i=0; i< rangesize; i++) {
+						
+						String str = br.readLine(); //Reads in data
+						
+					    String ics = ""; //splitting of the isbn
+					    int ins = -1;
+					    breakpoint = 0;
+					    chararray = str.toCharArray();
+					    
+					    for (int q=0; q<str.length(); q++) {
+					    	if (ics == "" && Character.isDigit(chararray[q]) == true) {
+					    		ics = str.substring(0,q);
+					    		breakpoint = q;
+					    	}
+					    	if (ics != "" && ins == -1) {
+					    		if (q == str.length() - 1 && ins == -1) { //last character
+					    			String tempstr = (str.substring(breakpoint,q+1));
+						    		if (tempstr.length() > 0 && Character.isDigit(chararray[q]) == true)
+						    			ins = Integer.parseInt(tempstr);
+					    		}
+					    		if (Character.isDigit(chararray[q]) == false && ins == -1) { //not a number anymore
+						    		String tempstr = (str.substring(breakpoint,q));
+						    		if (tempstr.length() > 0)
+						    			ins = Integer.parseInt(tempstr);	    			
+					    		}
+					    	}
+					    }
+					    
+					    lo[i] = ics;
+					    lonum[i] = ins;
+
+						str = br.readLine(); //Reads in data
+						
+					    ics = ""; //splitting of the isbn
+					    ins = -1;
+					    breakpoint = 0;
+					    chararray = str.toCharArray();
+					    
+					    for (int q=0; q<str.length(); q++) {
+					    	if (ics == "" && Character.isDigit(chararray[q]) == true) {
+					    		ics = str.substring(0,q);
+					    		breakpoint = q;
+					    	}
+					    	if (ics != "" && ins == -1) {
+					    		if (q == str.length() - 1 && ins == -1) { //last character
+					    			String tempstr = (str.substring(breakpoint,q+1));
+						    		if (tempstr.length() > 0 && Character.isDigit(chararray[q]) == true)
+						    			ins = Integer.parseInt(tempstr);
+					    		}
+					    		if (Character.isDigit(chararray[q]) == false && ins == -1) { //not a number anymore
+						    		String tempstr = (str.substring(breakpoint,q));
+						    		if (tempstr.length() > 0)
+						    			ins = Integer.parseInt(tempstr);	    			
+					    		}
+					    	}
+					    }
+					    
+					    hi[i] = ics;
+					    hinum[i] = ins;
+						
+						str = br.readLine(); //Discards hash
+
+					}
+				} 
+				catch (IOException e) {
+					finish(); //should not reach here either
+				}
+	    	}
+	    	
+	    	int lowcomp = 0;
+	    	int hicomp = 0;
+
+	    	//Compare ranges to ISBN
+	    	//If in range, carry on
+	    	boolean success = false;
+			for (int i=0; i<rangesize; i++) { //needs to be fixed, doesn't handle numbers and such correctly
+				lowcomp = isbnchars.compareToIgnoreCase(lo[i]);
+				hicomp = isbnchars.compareToIgnoreCase(hi[i]);
+				if ((lowcomp >= 0 && hicomp <= 0)) {
+					if ((isbnnums >= lonum[i] && isbnnums <= hinum[i]) || lonum[i]+hinum[i] == -2){
+						success = true;
+						target = i;
+					}
+				}
+				
+			}
+	    	
+	    	if (success == true) { //Will fail if user enters an invalid ISBN
 			    intent.putExtra(EXTRA_MESSAGE, target); //Places the id number of the node of the shelf where the ISBN would be
 			    intent.putExtra(ZOOM_LEVEL, zlevel);
 			    startActivity(intent);
