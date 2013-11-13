@@ -93,9 +93,12 @@ public class LoadActivity extends Activity {
 		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		boolean wasEnabled = myWifiManager.isWifiEnabled();
 		
+		boolean vare = true;
+		
 		if (wasEnabled == false) {
 			Toast.makeText(this, "Wifi Disabled. Please enable Wifi and try again.", Toast.LENGTH_SHORT).show();
-			finishAffinity();
+			finish();
+			vare = false;
 		}
 		
 		ids = new String[SIGNALS]; //The RSSIDs we want
@@ -190,8 +193,6 @@ public class LoadActivity extends Activity {
 		if (target > 383) {
 			targetfloor = 4;
 		}
-		
-		boolean vare = true;
 
 		
 		//part of here too
@@ -248,7 +249,7 @@ public class LoadActivity extends Activity {
 				fstarts[1] = 234;
 				fends[1] = 383;
 				fstarts[2] = 384;
-				fends[2] = 999;
+				fends[2] = 454;
 				
 				int countdown = 240*15;
 				
@@ -407,7 +408,13 @@ public class LoadActivity extends Activity {
 							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
 							//scale by distance from last node - the further you are from the last node, the less chance you are there
 							if (lastnode > -1) {
-								calcs[i] = calcs[i]*Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic
+								double heur = Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic 
+								
+								if (nextnode == i) //optimism
+									heur = heur/1.5;
+								
+								calcs[i] = calcs[i]*heur;
+
 							}
 						}
 						else
@@ -420,14 +427,20 @@ public class LoadActivity extends Activity {
 					lastnode = currnode;
 					
 					startnode = currnode;
-					int closestnode = 0; //the candidate for switching
+					int closestnode = -1; //the candidate for switching
 					
 					for(int i=0; i<mapsize; i++) {
-						if (calcs[i] < calcs[closestnode] && calcs[i] > -1) { //Pick nearest neighbor
+						if (closestnode == -1 && calcs[i] > -1)
+							closestnode = i; //first instance of a valid comparison
+							
+					}
+					for(int i=0; i<mapsize; i++) {
+						if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
 							closestnode = i;
-						}
+
 					}
 					
+					//check closestnode
 					if (stucknode == -1) { //if first run, set sticking point, where one is
 						stickiness = 3;
 						startnode = closestnode;
@@ -481,6 +494,9 @@ public class LoadActivity extends Activity {
 						finishAffinity(); //should not reach here
 					}
 					
+					int djsize = (1+fends[floor-2]-fstarts[floor-2]);
+					//update path generation - create a map of the right size (
+					
 					EdgeWeightedDigraph dg = new EdgeWeightedDigraph(mapsize);
 					
 					try { //Gets every set of neighbors for each node as in the neighbors file
@@ -504,7 +520,7 @@ public class LoadActivity extends Activity {
 						finishAffinity(); //should not reach here either
 					}		
 					
-					//Create Map with this info
+					//Create Map with this info (9)
 					DijkstraSP distances = new DijkstraSP(dg,startnode);
 			        
 					//Work with it
@@ -759,8 +775,14 @@ public class LoadActivity extends Activity {
 
     public double signalDistance(int us0, int us1, int us2, int us3, int loc0, int loc1, int loc2, int loc3) {
     	
-    	double result = Math.sqrt((Math.abs(us0-loc0)*Math.abs(us0-loc0)) + (Math.abs(us1-loc1)*Math.abs(us1-loc1)) + (Math.abs(us2-loc2)*Math.abs(us2-loc2)) + (Math.abs(us3-loc3)*Math.abs(us3-loc3)));
+    	//double result = Math.sqrt((Math.abs(us0-loc0)*Math.abs(us0-loc0)) + (Math.abs(us1-loc1)*Math.abs(us1-loc1)) + (Math.abs(us2-loc2)*Math.abs(us2-loc2)) + (Math.abs(us3-loc3)*Math.abs(us3-loc3)));
     	//Uses Euclidean distances as in the formula on the sheet (q=2)
+    	
+    	double pow = 1;
+    	//experimental, may be removed:
+    	double result = Math.sqrt( Math.pow(Math.abs(us0-loc0),pow) + Math.pow(Math.abs(us1-loc1),pow) + Math.pow(Math.abs(us2-loc2),pow) + Math.pow(Math.abs(us3-loc3),pow) );
+   	
+    	
     	return result;
     	
     }
