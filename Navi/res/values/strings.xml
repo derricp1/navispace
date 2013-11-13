@@ -10,5 +10,22 @@
     <string name="action_settings">Settings</string>
     <string name="toggle_in">Zoomed In</string>
     <string name="toggle_out">Zoomed Out</string>
+    <string name="priv">Privacy</string>
+    <string name="thanks">About</string>
+    <string name="title_activity_about">About</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="aboutstring">TCNJ BookNav is a research project developed by Patrick D\'Errico to provide an interface for navigation among the TCNJ Library.</string>
+    <string name="specialthanks">Special thanks to:</string>
+    <string name="people">(INSERT PEOPLE HERE)</string>
+    <string name="voice_in">Voiced Navigation</string>
+    <string name="voice_out">No Voiced Navigation</string>
+    <string name="word_in">Text Navigation</string>
+    <string name="word_out">No Text Navigation</string>
+    <string name="title_activity_help">Help</string>
+    <string name="hs1">Type a call number and press SEND to get a map to your desired book. The crown is your destination.</string>
+    <string name="hs2">The call number refers to the location in the library  of the book (and is not the ISBN).</string>
+    <string name="hs3">Press the VOICE NAVIGATION and TEXT NAVIGATION buttons to toggle these features.</string>
+    <string name="hs4">The path will update as you travel.</string>
+    <string name="help">Help</string>
 
 </resources>

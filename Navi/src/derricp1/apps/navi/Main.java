@@ -16,13 +16,19 @@ import java.util.Locale;
 public class Main extends Activity {
 	
 	public final static String EXTRA_MESSAGE = "derricp1.apps.MESSAGE"; //Message to display to user
-	public final static String ZOOM_LEVEL = "derricp1.apps.MESSAGE";
+	public final static String ZOOM_LEVEL = "derricp1.apps.MESSAGE2"; //this doesn't really matter, at least for what message
+	public final static String WORDS = "derricp1.apps.MESSAGE3";
+	public final static String VOICES = "derricp1.apps.MESSAGE4";
+	
 	public int rangesize = 455; //number of ranges (node sets) - Needs to be changed to strings due to call numbers
 	public String[] lo; //ranges
 	public String[] hi; //ranges
 	
 	public int[] lonum;
 	public int[] hinum;
+	
+	public boolean voices = false;
+	public boolean words = false;
 	
 	public boolean zlevel = false;
 	
@@ -32,74 +38,10 @@ public class Main extends Activity {
 	
 	/** Called when the user clicks the Send button */
 	public void sendMessage(View view) {
-
-		/*
 		
 	    Intent intent = new Intent(this, LoadActivity.class); //Makes an intent to pass the user's node
 	    EditText editText = (EditText) findViewById(R.id.input_message);
-	    //String message = editText.getText().toString();
-	    String isbn = editText.getText().toString();
-	    int target = 0;
-	    CharSequence cs = editText.getText();
-	    if (cs != null && cs.length() > 0) {
-	    	
-	    	if (loaded == false) {
-	    		
-				//Load range file
-	    		InputStream is = getResources().openRawResource(R.raw.range);				
-				InputStreamReader isr = new InputStreamReader(is);
-				BufferedReader br = new BufferedReader(isr);
-				
-				try {
-					String str = br.readLine(); //Reads the range size
-					rangesize = Integer.parseInt(str);
-					str = br.readLine(); //Discards hash
-					lo = new String[rangesize];
-					hi = new String[rangesize];
-				} 
-				catch (IOException e) {
-					finish(); //should not reach here
-				}
-
-				//sets pairs of numbers to range
-				try {
-					for (int i=0; i< rangesize; i++) {
-						String str = br.readLine(); //Reads in data
-						lo[i] = str;
-						str = br.readLine(); //Reads in data
-						hi[i] = str;
-						
-						str = br.readLine(); //Discards hash
-
-					}
-				} 
-				catch (IOException e) {
-					finish(); //should not reach here either
-				}
-	    	}
-	    	
-	    	int lowcomp = 0;
-	    	int hicomp = 0;
-
-	    	//Compare ranges to ISBN
-	    	//If in range, carry on
-	    	boolean success = false;
-			for (int i=0; i<rangesize; i++) { //needs to be fixed, doesn't handle numbers and such correctly
-				lowcomp = isbn.compareTo(lo[i]);
-				hicomp = isbn.compareTo(hi[i]);
-				if (lowcomp >= 0 && hicomp <= 0) {
-					success = true;
-					target = i;
-				}
-				
-			}
-			
-			*/
-		
-	    Intent intent = new Intent(this, LoadActivity.class); //Makes an intent to pass the user's node
-	    EditText editText = (EditText) findViewById(R.id.input_message);
-	    //String message = editText.getText().toString();
-	    String isbn = editText.getText().toString();
+	    String isbn = (editText.getText().toString()).toUpperCase(Locale.ENGLISH);
 	    
 	    String isbnchars = ""; //splitting of the isbn
 	    int isbnnums = -1;
@@ -180,7 +122,7 @@ public class Main extends Activity {
 					    	}
 					    }
 					    
-					    lo[i] = ics;
+					    lo[i] = ics.toUpperCase(Locale.ENGLISH);
 					    lonum[i] = ins;
 
 						str = br.readLine(); //Reads in data
@@ -209,7 +151,7 @@ public class Main extends Activity {
 					    	}
 					    }
 					    
-					    hi[i] = ics;
+					    hi[i] = ics.toUpperCase(Locale.ENGLISH);
 					    hinum[i] = ins;
 						
 						str = br.readLine(); //Discards hash
@@ -231,7 +173,25 @@ public class Main extends Activity {
 				lowcomp = isbnchars.compareToIgnoreCase(lo[i]);
 				hicomp = isbnchars.compareToIgnoreCase(hi[i]);
 				if ((lowcomp >= 0 && hicomp <= 0)) {
-					if ((isbnnums >= lonum[i] && isbnnums <= hinum[i]) || lonum[i]+hinum[i] == -2){
+					boolean numsuccess = false;
+					
+					if (lowcomp > 0 && hicomp < 0  || lonum[i]+hinum[i] == -2)
+						numsuccess = true;
+					
+					if (numsuccess == false) { 
+						boolean segsuccess = true;
+						
+						if (lowcomp == 0 && isbnnums < lonum[i])
+							segsuccess = false;
+						if (hicomp == 0 && isbnnums > hinum[i])
+							segsuccess = false;
+						
+						if (segsuccess == true)
+							numsuccess = true;
+							
+					}
+					
+					if (numsuccess == true){
 						success = true;
 						target = i;
 					}
@@ -242,6 +202,8 @@ public class Main extends Activity {
 	    	if (success == true) { //Will fail if user enters an invalid ISBN
 			    intent.putExtra(EXTRA_MESSAGE, target); //Places the id number of the node of the shelf where the ISBN would be
 			    intent.putExtra(ZOOM_LEVEL, zlevel);
+			    intent.putExtra(VOICES, voices);
+			    intent.putExtra(WORDS, words);
 			    startActivity(intent);
 	    	}
 	    	else {
@@ -254,12 +216,26 @@ public class Main extends Activity {
 	    }
 	}
 	
-    public void zup(View v) {
-    	ToggleButton but = (ToggleButton) findViewById(R.id.toggleButton1);
-    	if (but.isChecked())
-    		zlevel = true;
+    //public void zup(View v) {
+    //	ToggleButton but = (ToggleButton) findViewById(R.id.toggleButton1);
+    //	if (but.isChecked())
+    //		zlevel = true;
+    //	else
+    //		zlevel = false;
+    //}
+    
+    public void wordsup(View v) {
+    	if (words == false)
+    		words = true;
     	else
-    		zlevel = false;
+    		words = false;
+    }
+    
+    public void voiceup(View v) {
+    	if (voices == false)
+    		voices = true;
+    	else
+    		voices = false;
     }
 
 	@Override
@@ -274,6 +250,22 @@ public class Main extends Activity {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
+	
+	public void privacy(View view) {
+		Toast.makeText(this, "TCNJ BookNav will not collect any personally identifyng information about you. It will only collect WiFi information to guide you to your destination. Please turn your WiFi on.", Toast.LENGTH_LONG).show();
+	}
 
+	public void thanks(View view) {
+		//go to new method?
+	    Intent intent = new Intent(this, About.class); //Makes an intent to pass the user's node
+		startActivity(intent);
+	}
+	
+	public void help(View view) {
+		//go to new method?
+	    Intent intent = new Intent(this, HelpActivity.class); //Makes an intent to pass the user's node
+		startActivity(intent);
+	}
+	
 }
 

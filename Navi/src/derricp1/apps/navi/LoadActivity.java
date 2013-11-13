@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
+import java.math.*;
 
 //import derricp1.test.R;
 
@@ -34,6 +35,8 @@ public class LoadActivity extends Activity {
 	
 	public final int FLOORWIDTH = 190; //Floor height/width in feet
 	public final int FLOORHEIGHT = 124;
+	
+	Context now = this;
 	
 	//(0,0) is in top left corner
 	
@@ -71,17 +74,21 @@ public class LoadActivity extends Activity {
         int S2 = 2;
         int S3 = 3;
         int S4 = 4;
+        int S5 = 5;
         final SoundPool pool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
         final HashMap<Integer, Integer> soundsMap = new HashMap<Integer, Integer>();
         soundsMap.put(S1, pool.load(this, R.raw.left, 1));
         soundsMap.put(S2, pool.load(this, R.raw.right, 1));
         soundsMap.put(S3, pool.load(this, R.raw.s3, 1));
         soundsMap.put(S4, pool.load(this, R.raw.s4, 1));
+        soundsMap.put(S5, pool.load(this, R.raw.s5, 1));
 
         // Get the message from the intent
         Intent intent = getIntent();
-        final int targetnode = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
+        int target = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
         final boolean ztog = intent.getBooleanExtra(Main.ZOOM_LEVEL, false);
+        final boolean voice = intent.getBooleanExtra(Main.VOICES, false);
+        final boolean words = intent.getBooleanExtra(Main.WORDS, false);
         
 		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		boolean wasEnabled = myWifiManager.isWifiEnabled();
@@ -177,42 +184,44 @@ public class LoadActivity extends Activity {
 		//384+: floor 4
 		
 		int targetfloor = 3;
-		if (targetnode < 234) {
+		if (target < 234) {
 			targetfloor = 2;
 		}
-		if (targetnode > 383) {
+		if (target > 383) {
 			targetfloor = 4;
 		}
 		
-		//if none, error
-		if (ticker[0] + ticker[1] + ticker[2] == 0) {
-			String failstring = "Book at floor " + targetfloor + " Restart this app there.";
-			Toast.makeText(this, failstring, Toast.LENGTH_SHORT).show();
-			finishAffinity();			
-		}
+		boolean vare = true;
+
 		
-		if (bestmatch != targetfloor) {
-			String failstring = "Book at floor " + targetfloor + " Restart this app there.";
-			Toast.makeText(this, failstring, Toast.LENGTH_SHORT).show();
-			finishAffinity();
+		//part of here too
+		if (ticker[0] + ticker[1] + ticker[2] == 0 || (bestmatch != targetfloor)) {
+			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
+			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
+			vare = false;
+			finish();
 		}
 		
 		final int finalmatch = bestmatch;
+		final boolean isvalid = vare;
+		final int targetnode = target;
 			
 		//Begin loop here
 		
 		AsyncTask<Void, Bitmap, Void> math = new AsyncTask<Void, Bitmap, Void>(){
+			
+			int messagetype = 0;
 
 			@Override
 			protected Void doInBackground(Void... arg0) {
 				
 				WifiManager myWifiManager2 = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 				boolean wasEnabled2 = myWifiManager2.isWifiEnabled();
-				
 				int lastnode = -1;
 				int currnode = -1;
 				int nextnode = -1;
 				boolean success = false;
+				boolean canspeak = true;
 				
 				int[] currsig = new int[SIGNALS];
 				int tests = 100;
@@ -241,53 +250,61 @@ public class LoadActivity extends Activity {
 				fstarts[2] = 384;
 				fends[2] = 999;
 				
-				
+				int countdown = 240*15;
 				
 				//Let's try to get the info for where we are!
 				for(int i=0; i<SIGNALS; i++)
 					currsig[i] = 0;	
 				
-				while (!success) {
+				while (success == false && isvalid == true && countdown > 0) {
 					
-					for(int i=0; i<SIGNALS; i++)
-						thisscan[i] = -1;
-			
-					if (wasEnabled2 == true){ //Recheck WiFi availability, safety measure
-						for(int z=0; z<tests; z++) {
-							
-							for(int i=0; i<SIGNALS; i++)
-								thisscan[i] = -1;
-							
-							if(myWifiManager2.startScan()){ //Can we start?
-								// List available APs
-								List<ScanResult> scans = myWifiManager2.getScanResults();
-								if (scans != null && !scans.isEmpty()){
-									for (ScanResult scan : scans) {
-										int found = -1;
-										
-										for(int i=0; i<SIGNALS; i++) {
-											if (ids[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
-												found = i;
+					
+					//int test = 0;
+					//while (test < 9999) { //this should be taken out once testing is done
+						
+						for(int i=0; i<SIGNALS; i++)
+							thisscan[i] = -1;
+				
+						if (wasEnabled2 == true){ //Recheck WiFi availability, safety measure
+							for(int z=0; z<tests; z++) {
+								
+								for(int i=0; i<SIGNALS; i++)
+									thisscan[i] = -1;
+								
+								if(myWifiManager2.startScan()){ //Can we start?
+									// List available APs
+									List<ScanResult> scans = myWifiManager2.getScanResults();
+									if (scans != null && !scans.isEmpty()){
+										for (ScanResult scan : scans) {
+											int found = -1;
+											
+											for(int i=0; i<SIGNALS; i++) {
+												if (ids[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
+													found = i;
+												}
 											}
+											
+											if (found > -1) {
+												thisscan[found] = WifiManager.calculateSignalLevel(scan.level, LEVELS);
+											}
+											
 										}
-										
-										if (found > -1) {
-											thisscan[found] = WifiManager.calculateSignalLevel(scan.level, LEVELS);
-										}
-										
 									}
 								}
+								
+								for(int i=0; i<SIGNALS; i++)
+									currsig[i] = currsig[i] + thisscan[i];
+								
 							}
-							
-							for(int i=0; i<SIGNALS; i++)
-								currsig[i] = currsig[i] + thisscan[i];
-							
 						}
-					}
-
-					for(int q=0; q<SIGNALS; q++) {
-						currsig[q] = (int) Math.ceil(currsig[q]/tests);
-					}	
+	
+						for(int q=0; q<SIGNALS; q++) {
+							currsig[q] = (int) Math.ceil(currsig[q]/tests);
+						}
+						
+						//test++; //take this out too
+					
+					//} //this is the end of the test block
 					
 			        //Read in absolute coordinates of nodes
 					InputStream is = getResources().openRawResource(R.raw.nodelocs);
@@ -390,7 +407,7 @@ public class LoadActivity extends Activity {
 							calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
 							//scale by distance from last node - the further you are from the last node, the less chance you are there
 							if (lastnode > -1) {
-								calcs[i] = calcs[i]+realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]); //additive heuristic
+								calcs[i] = calcs[i]*Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic
 							}
 						}
 						else
@@ -412,7 +429,7 @@ public class LoadActivity extends Activity {
 					}
 					
 					if (stucknode == -1) { //if first run, set sticking point, where one is
-						stickiness = 2;
+						stickiness = 3;
 						startnode = closestnode;
 						stucknode = closestnode;
 						sticknode = -1;
@@ -421,7 +438,7 @@ public class LoadActivity extends Activity {
 					else {
 						if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
 							sticknode = closestnode;
-							stickiness = 2;
+							stickiness = 3;
 						}
 						else {
 							if (closestnode == sticknode) { //If tests match, iterate towards updating location
@@ -430,13 +447,14 @@ public class LoadActivity extends Activity {
 									startnode = closestnode;
 									stucknode = closestnode;
 									sticknode = -1;
-									stickiness = 2;
+									stickiness = 3;
 									newstep = true;
+									canspeak = true;
 								}								
 							}
 							else { //reset
 								sticknode = closestnode;
-								stickiness = 2;
+								stickiness = 3;
 							}
 						}
 					}
@@ -529,8 +547,7 @@ public class LoadActivity extends Activity {
 			        }
 			        
 			        double mult = 1;
-			        if (ztog)
-			        	mult = 1.5;
+			        //we could toggle but there's the leak
 			        
 			        Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
 			
@@ -540,8 +557,6 @@ public class LoadActivity extends Activity {
 			        
 			        int nh = (int)(bitmap.getHeight()*factor*mult);
 			        int nw = (int)(bitmap.getWidth()*factor*mult);
-			        
-			        
 			        
 			        // Create a new bitmap with the scaling factor
 			        //zoom the drawable if zoom option is on
@@ -555,13 +570,6 @@ public class LoadActivity extends Activity {
 			        Bitmap linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
 			        tempCanvas.setBitmap(linemap);
 			        //Works as we go
-		        
-			        /*
-			        Bitmap linemap = Bitmap.createScaledBitmap(bitmap, nw*mult, nh*mult, false);
-			        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw*mult, nh*mult, false);
-			        Canvas tempCanvas = new Canvas(linemap);
-			        */
-			        
 			        
 			        myPaint.setColor(Color.BLACK);
 			        BLUE.setColor(Color.BLUE);
@@ -599,6 +607,8 @@ public class LoadActivity extends Activity {
 			        //try to play sound
 			        boolean left = false;
 			        boolean right = false;
+			        
+			        messagetype = 0;
  
 			        //nodex, nodey
 			        if (currnode > -1 && nextnode > -1 && lastnode > -1 && newstep == true) {
@@ -609,24 +619,37 @@ public class LoadActivity extends Activity {
 				        	right = true;
 				        }
 			        }
-			        if (left) {
+			        if (left && canspeak) {
 			            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 			            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
 			            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-			            float volume = streamVolumeCurrent / streamVolumeMax;  
+			            float volume = streamVolumeCurrent / streamVolumeMax; 
+			            canspeak = false;
 
-			            pool.play(soundsMap.get(1), volume, volume, 1, 0, 1);       	
+			            if (voice) {
+			            	pool.play(soundsMap.get(1), volume, volume, 1, 0, 1); 
+			            }
+			            if (words) {
+			            	messagetype = 1;
+			            }
+			            
 			        }
-			        if (right) {
+			        if (right && canspeak) {
 			            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 			            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
 			            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-			            float volume = streamVolumeCurrent / streamVolumeMax;  
+			            float volume = streamVolumeCurrent / streamVolumeMax;
+			            canspeak = false;
 
-			            pool.play(soundsMap.get(2), volume, volume, 1, 0, 1); 	        	
+			            if (voice) {
+			            	pool.play(soundsMap.get(2), volume, volume, 1, 0, 1); 
+			            } 
+			            if (words) {
+			            	messagetype = 2;
+			            }
 			        }
 			        
-			        if (!left && !right) { //if no turns, check for obstacles
+			        if (!left && !right && canspeak) { //if no turns, check for obstacles
 			        	
 			        	int ostart = 0;
 			        	//oends[bestmatch-2]
@@ -642,18 +665,30 @@ public class LoadActivity extends Activity {
 						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
 						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-						            float volume = streamVolumeCurrent / streamVolumeMax;  
+						            float volume = streamVolumeCurrent / streamVolumeMax;
+						            canspeak = false;
 
-						            pool.play(soundsMap.get(3), volume, volume, 1, 0, 1);  
+						            if (voice) {
+						            	pool.play(soundsMap.get(3), volume, volume, 1, 0, 1); 
+						            }
+						            if (words) {
+						            	messagetype = 1;
+						            }
 						        	break;
 						        }
 						        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] >= ox[i])) {
 						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
 						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-						            float volume = streamVolumeCurrent / streamVolumeMax;  
+						            float volume = streamVolumeCurrent / streamVolumeMax;
+						            canspeak = false;
 
-						            pool.play(soundsMap.get(4), volume, volume, 1, 0, 1);  
+						            if (voice) {
+						            	pool.play(soundsMap.get(4), volume, volume, 1, 0, 1); 
+						            }
+						            if (words) {
+						            	messagetype = 2;
+						            }
 						        	break;
 						        }	
 			        		}
@@ -673,8 +708,18 @@ public class LoadActivity extends Activity {
 			        	success = true;
 			        }
 			        
+			        countdown--;
 			        publishProgress(linemap);
 			        
+				}
+				if (success == true) {
+		            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+		            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+		            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		            float volume = streamVolumeCurrent / streamVolumeMax;
+		            if (voice) {
+		            	pool.play(soundsMap.get(5), volume, volume, 1, 0, 1); //needs to be 5
+		            }				
 				}
 				return null;
 			}
@@ -682,6 +727,14 @@ public class LoadActivity extends Activity {
 			@Override
 			protected void onProgressUpdate(Bitmap... result) {
 				imageView.setImageBitmap(result[0]);
+				
+				if (messagetype == 1) {
+					Toast.makeText(now, "Turn Left.", Toast.LENGTH_SHORT).show();
+				}
+				if (messagetype == 2) {
+					Toast.makeText(now, "Turn Right.", Toast.LENGTH_SHORT).show();
+				}				
+				
 			}
 			
 			

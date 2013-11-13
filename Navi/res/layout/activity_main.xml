@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal">
 
-    <TableLayout
+ 	<TableLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.47" >
@@ -14,6 +14,19 @@
             android:id="@+id/tableRow1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <TableRow
+                    android:id="@+id/tableRow2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" >
+                </TableRow>
+
+            </LinearLayout>
 
             <EditText
                 android:id="@+id/input_message"
@@ -26,46 +39,92 @@
             </EditText>
         </TableRow>
 
-        <TableRow
-            android:id="@+id/tableRow2"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
 
-            <ToggleButton
-                android:id="@+id/toggleButton1"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:checked="false"
-                android:onClick="zup"
-                android:textOff="@string/toggle_out"
-                android:textOn="@string/toggle_in" />
+            <TableRow
+                android:id="@+id/tableRow3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" >
 
-        </TableRow>
+                <ToggleButton
+                    android:id="@+id/toggleButton2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:onClick="voiceup"
+                    android:textOff="@string/voice_out"
+                    android:textOn="@string/voice_in" />
 
-        <TableRow
-            android:id="@+id/tableRow3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
-        </TableRow>
+                <ToggleButton
+                    android:id="@+id/toggleButton3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:onClick="wordsup"
+                    android:textOff="@string/word_out"
+                    android:textOn="@string/word_in" />                
+                
+            </TableRow>
 
-        <TableRow
-            android:id="@+id/tableRow4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
+        </LinearLayout>
 
-            <ImageView
-                android:id="@+id/imageView1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/logo" />
+       	<LinearLayout
+       	    android:layout_width="match_parent"
+       	    android:layout_height="wrap_content"
+       	    android:layout_gravity="bottom"
+       	    android:gravity="left|right"
+       	    android:orientation="vertical" >
 
-        </TableRow>
+       		<TableRow
+       		    android:id="@+id/tableRow4"
+       		    android:layout_width="match_parent"
+       		    android:layout_height="wrap_content" >
 
+       		</TableRow>
+
+       		<ImageView
+       		    android:id="@+id/imageView1"
+       		    android:layout_width="wrap_content"
+       		    android:layout_height="wrap_content"
+       		    android:src="@drawable/logo" />
+
+       		<TableRow
+       		    android:id="@+id/tableRow5"
+       		    android:layout_width="match_parent"
+       		    android:layout_height="wrap_content" >
+
+       		    <Button
+       		        android:id="@+id/button1"
+       		        android:layout_width="wrap_content"
+       		        android:layout_height="wrap_content"
+       		        android:onClick="thanks"
+       		        android:text="@string/thanks" />
+
+       		    <Button
+       		        android:layout_width="wrap_content"
+       		        android:layout_height="match_parent"
+       		        android:onClick="privacy"
+       		        android:text="@string/priv" />
+       		    
+       		   	<Button
+       		        android:layout_width="wrap_content"
+       		        android:layout_height="match_parent"
+       		        android:onClick="help"
+       		        android:text="@string/help" />
+
+
+       		</TableRow>
+
+        </LinearLayout>
+
+ 
     </TableLayout>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="100dp"
-        android:text="@string/button_send"
-        android:onClick="sendMessage" />
+        android:onClick="sendMessage"
+        android:text="@string/button_send" />
+
 </LinearLayout>
