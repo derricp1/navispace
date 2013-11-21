@@ -27,6 +27,9 @@ public class Main extends Activity {
 	public int[] lonum;
 	public int[] hinum;
 	
+	public String[] lolast;
+	public String[] hilast;	
+	
 	public boolean voices = false;
 	public boolean words = false;
 	
@@ -43,8 +46,17 @@ public class Main extends Activity {
 	    EditText editText = (EditText) findViewById(R.id.input_message);
 	    String isbn = (editText.getText().toString()).toUpperCase(Locale.ENGLISH);
 	    
+	    //remove periods
+	    for (int q=0; q<isbn.length(); q++) {
+	    	while (isbn.charAt(q) == '.' || isbn.charAt(q) == ' ') {
+	    		isbn = isbn.substring(0, q-1) + isbn.substring(q+1, isbn.length()-1); //chop period
+	    	}	
+	    }
+	    //also do the third level split 
+	    
 	    String isbnchars = ""; //splitting of the isbn
 	    int isbnnums = -1;
+	    String isbnend = "";
 	    
 	    int breakpoint = 0;
 	    char[] chararray = isbn.toCharArray();
@@ -53,7 +65,7 @@ public class Main extends Activity {
 	    		isbnchars = isbn.substring(0,q);
 	    		breakpoint = q;
 	    	}
-	    	if (isbnchars != "" && isbnnums == -1) {
+	    	if (isbnchars != "" && isbnnums == -1 && isbnend == "") {
 	    		if (q == isbn.length() - 1 && isbnnums == -1) { //last character
 	    			String tempstr = (isbn.substring(breakpoint,q+1));
 		    		if (tempstr.length() > 0 && Character.isDigit(chararray[q]) == true)
@@ -61,9 +73,13 @@ public class Main extends Activity {
 	    		}
 	    		if (Character.isDigit(chararray[q]) == false && isbnnums == -1) { //not a number anymore
 		    		String tempstr = (isbn.substring(breakpoint,q));
+		    		breakpoint = q;
 		    		if (tempstr.length() > 0)
 		    			isbnnums = Integer.parseInt(tempstr);	    			
 	    		}
+	    	}
+	    	if (isbnchars != "" && isbnnums != -1 && isbnend == "") {
+	    		isbnend = isbn.substring(q,isbn.length());    		
 	    	}
 	    }
 	    
@@ -87,6 +103,8 @@ public class Main extends Activity {
 					hi = new String[rangesize];
 					lonum = new int[rangesize];
 					hinum = new int[rangesize];
+					lolast = new String[rangesize];
+					hilast = new String[rangesize];
 				} 
 				catch (IOException e) {
 					finish(); //should not reach here
@@ -100,6 +118,7 @@ public class Main extends Activity {
 						
 					    String ics = ""; //splitting of the isbn
 					    int ins = -1;
+					    String ils = "";
 					    breakpoint = 0;
 					    chararray = str.toCharArray();
 					    
@@ -116,14 +135,19 @@ public class Main extends Activity {
 					    		}
 					    		if (Character.isDigit(chararray[q]) == false && ins == -1) { //not a number anymore
 						    		String tempstr = (str.substring(breakpoint,q));
+						    		breakpoint = q;
 						    		if (tempstr.length() > 0)
 						    			ins = Integer.parseInt(tempstr);	    			
 					    		}
+					    	}
+					    	if (ics != "" && ins != -1 && ils == "") {
+					    		ils = str.substring(q,str.length());     		
 					    	}
 					    }
 					    
 					    lo[i] = ics.toUpperCase(Locale.ENGLISH);
 					    lonum[i] = ins;
+					    lolast[i] = ils;
 
 						str = br.readLine(); //Reads in data
 						
@@ -145,14 +169,19 @@ public class Main extends Activity {
 					    		}
 					    		if (Character.isDigit(chararray[q]) == false && ins == -1) { //not a number anymore
 						    		String tempstr = (str.substring(breakpoint,q));
+						    		breakpoint = q;
 						    		if (tempstr.length() > 0)
 						    			ins = Integer.parseInt(tempstr);	    			
 					    		}
+					    	}
+					    	if (ics != "" && ins != -1 && ils == "") {
+					    		ils = str.substring(q,str.length());     		
 					    	}
 					    }
 					    
 					    hi[i] = ics.toUpperCase(Locale.ENGLISH);
 					    hinum[i] = ins;
+					    hilast[i] = ils;
 						
 						str = br.readLine(); //Discards hash
 
@@ -186,6 +215,11 @@ public class Main extends Activity {
 						if (hicomp == 0 && isbnnums > hinum[i])
 							segsuccess = false;
 						
+						if (lolast[i] != "" || hilast[i] != "") {
+							if ((lolast[i] != "" && isbnend.compareTo(lolast[i]) < 0 && (lowcomp == 0 && isbnnums == lonum[i])) || (hilast[i] != "" && isbnend.compareTo(hilast[i]) > 0 && (hicomp == 0 && isbnnums == hinum[i])))
+								segsuccess = false;
+						}
+
 						if (segsuccess == true)
 							numsuccess = true;
 							
@@ -264,6 +298,12 @@ public class Main extends Activity {
 	public void help(View view) {
 		//go to new method?
 	    Intent intent = new Intent(this, HelpActivity.class); //Makes an intent to pass the user's node
+		startActivity(intent);
+	}
+	
+	public void test(View view) {
+		//go to new method?
+	    Intent intent = new Intent(this, TestActivity.class); //Makes an intent to pass the user's node
 		startActivity(intent);
 	}
 	

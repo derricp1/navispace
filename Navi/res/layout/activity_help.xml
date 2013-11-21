@@ -40,7 +40,13 @@
             android:text="@string/hs2"
             android:textAppearance="?android:attr/textAppearanceMedium" />
             
-        </TableRow>        
+        </TableRow>
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/call" />
 
         <TableRow
             android:id="@+id/tableRow3"
@@ -76,10 +82,10 @@
             android:layout_height="wrap_content" >
 
 		   <Button
-		   android:layout_width="wrap_content"
-		   android:layout_height="100dp"
-		   android:onClick="backup"
-		   android:text="BACK" />
+		       android:layout_width="wrap_content"
+		       android:layout_height="match_parent"
+		       android:onClick="backup"
+		       android:text="BACK" />
 	               
         </TableRow>
         

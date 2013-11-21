@@ -23,9 +23,11 @@
     <string name="word_out">No Text Navigation</string>
     <string name="title_activity_help">Help</string>
     <string name="hs1">Type a call number and press SEND to get a map to your desired book. The crown is your destination.</string>
-    <string name="hs2">The call number refers to the location in the library  of the book (and is not the ISBN).</string>
+    <string name="hs2">The call number refers to the location in the library  of the book.</string>
     <string name="hs3">Press the VOICE NAVIGATION and TEXT NAVIGATION buttons to toggle these features.</string>
     <string name="hs4">The path will update as you travel.</string>
     <string name="help">Help</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="tsr">999</string>
 
 </resources>

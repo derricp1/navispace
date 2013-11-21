@@ -38,6 +38,10 @@
             android:name="derricp1.apps.navi.HelpActivity"
             android:label="@string/title_activity_help" >
         </activity>
+        <activity
+            android:name="derricp1.apps.navi.TestActivity"
+            android:label="@string/title_activity_test" >
+        </activity>
     </application>
 
 </manifest>
