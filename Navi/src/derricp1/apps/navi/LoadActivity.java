@@ -12,8 +12,11 @@ import java.math.*;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -56,6 +59,8 @@ public class LoadActivity extends Activity {
     private Paint myPaint = new Paint();
     private Paint BLUE = new Paint();
     private Paint GREEN = new Paint();
+    
+    private boolean vare = true;
 
     @SuppressLint("NewApi")
     @Override
@@ -66,59 +71,6 @@ public class LoadActivity extends Activity {
         setContentView(R.layout.activity_load);
         
         this.imageView = (ImageView)findViewById(R.id.scroller); //Read in the view that lets us scroll the map
-        
- /*       //sound
-        int S1 = 1;
-        int S2 = 2;
-        int S3 = 3;
-        int S4 = 4;
-        int S5 = 5;
-        final SoundPool pool = new SoundPool(4, AudioManager.STREAM_MUSIC, 100);
-        final HashMap<Integer, Integer> soundsMap = new HashMap<Integer, Integer>();
-        soundsMap.put(S1, pool.load(this, R.raw.left, 1));
-        soundsMap.put(S2, pool.load(this, R.raw.right, 1));
-        soundsMap.put(S3, pool.load(this, R.raw.s3, 1));
-        soundsMap.put(S4, pool.load(this, R.raw.s4, 1));
-        soundsMap.put(S5, pool.load(this, R.raw.s5, 1));
-
-        // Get the message from the intent
-        Intent intent = getIntent();
-        int target = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
-        final boolean ztog = intent.getBooleanExtra(Main.ZOOM_LEVEL, false);
-        final boolean voice = intent.getBooleanExtra(Main.VOICES, false);
-        final boolean words = intent.getBooleanExtra(Main.WORDS, false);
-        
-		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-		boolean wasEnabled = myWifiManager.isWifiEnabled();
-		
-		boolean vare = true;
-		
-		if (wasEnabled == false) {
-			Toast.makeText(this, "Wifi Disabled. Please enable Wifi and try again.", Toast.LENGTH_SHORT).show();
-			finish();
-			vare = false;
-		}
-		
-		ids = new String[SIGNALS]; //The RSSIDs we want
-		rssids = new String[SIGNALS]; //Need to expand for more floors
-		
-		String[] s1 = new String[4];
-		String[] s2 = new String[4];
-		String[] s3 = new String[4];
-		int[] ticker = new int[3];
-		
-		s1[0] = "d8:c7:c8:6e:7b:60"; //second floor
-		s1[1] = "d8:c7:c8:ab:21:52";
-		s1[2] = "d8:c7:c8:ab:2e:e8";
-		s1[3] = "d8:c7:c8:6e:81:a8";
-		s2[0] = "d8:c7:c8:ab:2f:88"; //third floor
-		s2[1] = "d8:c7:c8:ab:29:f8";
-		s2[2] = "d8:c7:c8:ab:26:d2";
-		s2[3] = "d8:c7:c8:ab:29:80";
-		s3[0] = "d8:c7:c8:ab:23:08"; //fourth floor
-		s3[1] = "d8:c7:c8:ab:29:ea";
-		s3[2] = "d8:c7:c8:ab:23:01";
-		s3[3] = "d8:c7:c8:ab:2c:51";*/
 
         //sound
         int S1 = 1;
@@ -143,8 +95,6 @@ public class LoadActivity extends Activity {
         
 		WifiManager myWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		boolean wasEnabled = myWifiManager.isWifiEnabled();
-		
-		boolean vare = true;
 		
 		if (wasEnabled == false) {
 			Toast.makeText(this, "Wifi Disabled. Please enable Wifi and try again.", Toast.LENGTH_SHORT).show();
@@ -231,15 +181,43 @@ public class LoadActivity extends Activity {
 		}
 		
 		int bestmatch = 4; 
-		if (ticker[0] >= ticker[1] && ticker[0] >= ticker[2]) {
+		if ((ticker[0] > ticker[1] && ticker[0] > ticker[2]) || (ticker[0] >= ticker[1] && ticker[0] > ticker[2] && targetfloor == 2)) {
 			bestmatch = 2;
 		}
-		if (ticker[1] >= ticker[0] && ticker[1] >= ticker[2]) {
+		if ((ticker[1] > ticker[0] && ticker[1] > ticker[2]) || (ticker[1] >= ticker[0] && ticker[1] > ticker[2] && targetfloor == 3)) {
 			bestmatch = 3;
 		}
-		
-		if (ticker[targetfloor-2] >= 3)
-			bestmatch = targetfloor;
+
+		/*while (words == true && bestmatch != targetfloor) {
+			
+			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+	 
+			// set title
+			alertDialogBuilder.setTitle("Confirm Correct Floor");
+	 
+			// set dialog message
+			alertDialogBuilder
+				.setMessage("The book is on floor " + targetfloor + " ? You appear to be on floor " + bestmatch + ".")
+				.setCancelable(false)
+				.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,int id) {
+						dialog.cancel();
+					}
+				})
+				.setNegativeButton("No",new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog,int id) {
+						dialog.cancel();
+						vare = false; //you may need to move vare below here as local/not a public to the activity  
+					}
+				});
+	 
+				// create alert dialog
+				AlertDialog alertDialog = alertDialogBuilder.create();
+	 
+				// show it
+				alertDialog.show();
+				
+		}*/
 		
 		switch (bestmatch) {
 		
@@ -270,15 +248,14 @@ public class LoadActivity extends Activity {
 			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
 			vare = false;
-			finish();
 		}
+		
+		if (vare == false)
+			finish();
 		
 		final int finalmatch = bestmatch;
 		final boolean isvalid = vare;
 		final int targetnode = target;
-		
-		
-		
 		
 			
 		//Begin loop here
@@ -286,6 +263,7 @@ public class LoadActivity extends Activity {
 		AsyncTask<Void, Bitmap, Void> math = new AsyncTask<Void, Bitmap, Void>(){
 			
 			int messagetype = 0;
+			boolean reminder = false;
 
 			@Override
 			protected Void doInBackground(Void... arg0) {
@@ -416,11 +394,21 @@ public class LoadActivity extends Activity {
 				for(int i=0; i<SIGNALS; i++)
 					currsig[i] = 0;	
 				
+				boolean firstrun = true;
+				
 				while (success == false && isvalid == true && countdown > 0) {
 					
 					boolean foundpoint = false;
+					int maxmistakes = 1;
+					int trials = 0;
+					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
 					
 					while (foundpoint == false) {
+						
+						trials++;
+						if ((trials % 10) % 2 == 0) {
+							maxmistakes++;
+						}
 						
 						for(int i=0; i<SIGNALS; i++)
 							thisscan[i] = -1;
@@ -494,11 +482,10 @@ public class LoadActivity extends Activity {
 							if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 								
 								int mistakes = 0;
-								int maxmistakes = 1; //may change
 								int pow = 2;
 								
 								for (int j=0; j<SIGNALS; j++) {
-									if (isthere[j][i] != isus[j])
+									if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
 										mistakes++;
 								}
 								
@@ -541,6 +528,8 @@ public class LoadActivity extends Activity {
 					
 					//get the last position, for voice
 					lastnode = currnode;
+					
+					
 					
 					startnode = currnode;
 					int closestnode = -1; //the candidate for switching		
@@ -636,16 +625,20 @@ public class LoadActivity extends Activity {
 						finish(); //should not reach here either
 					}		
 					
-					//Create Map with this info (9)
-					DijkstraSP distances = new DijkstraSP(dg,startnode);
-			        
-					//Work with it
-					int[] pathstarts;
-					int[] pathends;
-					int counting = 0;
+					if (startnode == targetnode) {
+						success = true;
+					}
+					else {
+						//Create Map with this info (9)
+						DijkstraSP distances = new DijkstraSP(dg,startnode);
+				        
+						//Work with it
+						int[] pathstarts;
+						int[] pathends;
+						int counting = 0;
+						
+				        //Unless the map is poorly constructed, this won't fail
 					
-			        //Unless the map is poorly constructed, this won't fail
-					if (startnode != targetnode) {
 				        for (DirectedEdge e : distances.pathTo(targetnode)) {
 				            counting++;
 				        }
@@ -710,7 +703,24 @@ public class LoadActivity extends Activity {
 				        
 				        myPaint.setStrokeWidth((float) (10*mult)); //make the lines bigger, will only affect the directional lines
 				        
+				        //do again for crown
+				        
+				        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
+				        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
+				        int imgh = (int)(imgmap.getHeight()*factor*mult);
+				        int imgw = (int)(imgmap.getWidth()*factor*mult);
+				        
+				        float firstx = scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw);
+				        
+				        if (firstrun == true && firstx > getWindowManager().getDefaultDisplay().getWidth())
+				        	reminder = true;
+				        else
+				        	reminder = false;
+				        	
+				        firstrun = false;
+				        
 				        //Draw the image bitmap into the canvas
+				        
 				        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
 				        
 				        //Draw Lines
@@ -724,17 +734,10 @@ public class LoadActivity extends Activity {
 				        	nextnode = pathends[0];
 				        }
 				        
-				        //do again for crown
-				        
-				        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
-				        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
-				        int imgh = (int)(imgmap.getHeight()*factor*mult);
-				        int imgw = (int)(imgmap.getWidth()*factor*mult);
-				        
 				        Bitmap newimgmap = Bitmap.createScaledBitmap(imgmap, imgw, imgh, false);
 				        
 				        //Draw full map
-				        tempCanvas.drawCircle(scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw), scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
+				        tempCanvas.drawCircle(firstx, scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
 				        tempCanvas.drawBitmap(newimgmap, (scale((float)nodex[pathends[0]], FLOORWIDTH, nw) - (imgw/2)), (scale((float)nodey[pathends[0]], FLOORHEIGHT, nh) - (imgh/2)), GREEN);
 				        
 				        //try to play sound
@@ -837,7 +840,7 @@ public class LoadActivity extends Activity {
 				        	e.printStackTrace();
 				        }
 				        
-				        if (currnode == targetnode) {
+				        if (currnode == targetnode || startnode == targetnode) {
 				        	success = true;
 				        }
 				        
@@ -854,6 +857,7 @@ public class LoadActivity extends Activity {
 		            	pool.play(soundsMap.get(5), volume, volume, 1, 0, 1); //needs to be 5
 		            }				
 				}
+				finish();
 				return null;
 			}
 
@@ -866,7 +870,10 @@ public class LoadActivity extends Activity {
 				}
 				if (messagetype == 2) {
 					Toast.makeText(now, "Turn Right.", Toast.LENGTH_SHORT).show();
-				}				
+				}	
+				
+				if (reminder == true)
+					Toast.makeText(now, "Scroll right to see your location", Toast.LENGTH_LONG).show();
 				
 			}
 			
@@ -888,18 +895,6 @@ public class LoadActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
-    
-
-/*    public double signalDistance(int us0, int us1, int us2, int us3, int loc0, int loc1, int loc2, int loc3) {
-
-    	double pow = 2;
-    	//experimental, may be removed:
-    	double result = Math.sqrt( Math.pow(Math.abs(us0-loc0),pow) + Math.pow(Math.abs(us1-loc1),pow) + Math.pow(Math.abs(us2-loc2),pow) + Math.pow(Math.abs(us3-loc3),pow) );
-   	
-    	
-    	return result;
-    	
-    }*/
     
     public float scale(float inloc, int inmax, int indim) {
     	
