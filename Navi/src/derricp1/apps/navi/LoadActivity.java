@@ -41,6 +41,9 @@ public class LoadActivity extends Activity {
 	
 	Context now = this;
 	
+	String estring = "";
+	int enumb = 0;
+	
 	//(0,0) is in top left corner
 	
 	public String[] ids; //ids of access points (rssids) we are using
@@ -61,6 +64,9 @@ public class LoadActivity extends Activity {
     private Paint GREEN = new Paint();
     
     private boolean vare = true;
+    private boolean cancelled = false;
+    private boolean butcan = false;
+    private boolean notav = false;
 
     @SuppressLint("NewApi")
     @Override
@@ -154,89 +160,65 @@ public class LoadActivity extends Activity {
 		if (target > 383) {
 			targetfloor = 4;
 		}
-
-		//check to determine floor
-		if (myWifiManager.isWifiEnabled()){ //Recheck WiFi availability, safety measure
-			if(myWifiManager.startScan()){ //Can we start?
-				// List available APs
-				List<ScanResult> scans = myWifiManager.getScanResults();
-				if (scans != null && !scans.isEmpty()){
-					for (ScanResult scan : scans) {
-						
-						for(int i=0; i<SIGNALS; i++) {
-							if (s1[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
-								ticker[0] = ticker[0] + 1;
+		int bestmatch = 4;
+		
+		try {
+			//check to determine floor
+			if (myWifiManager.isWifiEnabled()){ //Recheck WiFi availability, safety measure
+				if(myWifiManager.startScan()){ //Can we start?
+					// List available APs
+					List<ScanResult> scans = myWifiManager.getScanResults();
+					if (scans != null && !scans.isEmpty()){
+						for (ScanResult scan : scans) {
+							
+							for(int i=0; i<SIGNALS; i++) {
+								if (s1[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
+									ticker[0] = ticker[0] + 1;
+								}
+								if (s2[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
+									ticker[1] = ticker[1] + 1;
+								}
+								if (s3[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
+									ticker[2] = ticker[2] + 1;
+								}
 							}
-							if (s2[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
-								ticker[1] = ticker[1] + 1;
-							}
-							if (s3[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
-								ticker[2] = ticker[2] + 1;
-							}
+							
 						}
-						
 					}
-				}
-			}				
-		}
-		
-		int bestmatch = 4; 
-		if ((ticker[0] > ticker[1] && ticker[0] > ticker[2]) || (ticker[0] >= ticker[1] && ticker[0] > ticker[2] && targetfloor == 2)) {
-			bestmatch = 2;
-		}
-		if ((ticker[1] > ticker[0] && ticker[1] > ticker[2]) || (ticker[1] >= ticker[0] && ticker[1] > ticker[2] && targetfloor == 3)) {
-			bestmatch = 3;
-		}
-
-		/*while (words == true && bestmatch != targetfloor) {
+				}				
+			}
+			 
+			if ((ticker[0] > ticker[1] && ticker[0] > ticker[2]) || (ticker[0] >= ticker[1] && ticker[0] >= ticker[2] && targetfloor == 2)) {
+				bestmatch = 2;
+			}
+			if ((ticker[1] > ticker[0] && ticker[1] > ticker[2]) || (ticker[1] >= ticker[0] && ticker[1] >= ticker[2] && targetfloor == 3)) {
+				bestmatch = 3;
+			}
+	
 			
-			AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-	 
-			// set title
-			alertDialogBuilder.setTitle("Confirm Correct Floor");
-	 
-			// set dialog message
-			alertDialogBuilder
-				.setMessage("The book is on floor " + targetfloor + " ? You appear to be on floor " + bestmatch + ".")
-				.setCancelable(false)
-				.setPositiveButton("Yes",new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,int id) {
-						dialog.cancel();
-					}
-				})
-				.setNegativeButton("No",new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog,int id) {
-						dialog.cancel();
-						vare = false; //you may need to move vare below here as local/not a public to the activity  
-					}
-				});
-	 
-				// create alert dialog
-				AlertDialog alertDialog = alertDialogBuilder.create();
-	 
-				// show it
-				alertDialog.show();
-				
-		}*/
-		
-		switch (bestmatch) {
-		
-		case 2:
-			for (int k=0; k<SIGNALS; k++) {
-				ids[k] = s1[k];
+			switch (bestmatch) {
+			
+			case 2:
+				for (int k=0; k<SIGNALS; k++) {
+					ids[k] = s1[k];
+				}
+				break;
+			case 3:
+				for (int k=0; k<SIGNALS; k++) {
+					ids[k] = s2[k];
+				}
+				break;			
+			default:
+				for (int k=0; k<SIGNALS; k++) {
+					ids[k] = s3[k];
+				}
+				break;
+			
 			}
-			break;
-		case 3:
-			for (int k=0; k<SIGNALS; k++) {
-				ids[k] = s2[k];
-			}
-			break;			
-		default:
-			for (int k=0; k<SIGNALS; k++) {
-				ids[k] = s3[k];
-			}
-			break;
-		
+		}
+		catch (Exception e) {
+			vare = false;
+			estring = e.toString();
 		}
 		
 		final int floor = bestmatch;
@@ -244,19 +226,21 @@ public class LoadActivity extends Activity {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		if ((ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
 			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
 			vare = false;
 		}
 		
-		if (vare == false)
+		if (vare == false) {
 			finish();
+			if (estring != "")
+				Toast.makeText(this, "Sorry, an error has occurred.", Toast.LENGTH_LONG).show();
+		}
 		
 		final int finalmatch = bestmatch;
-		final boolean isvalid = vare;
 		final int targetnode = target;
-		
+		final boolean isvalid = vare;
 			
 		//Begin loop here
 		
@@ -264,6 +248,8 @@ public class LoadActivity extends Activity {
 			
 			int messagetype = 0;
 			boolean reminder = false;
+			boolean success = false;
+			int messageticker = 0;
 
 			@Override
 			protected Void doInBackground(Void... arg0) {
@@ -273,7 +259,7 @@ public class LoadActivity extends Activity {
 				int lastnode = -1;
 				int currnode = -1;
 				int nextnode = -1;
-				boolean success = false;
+				
 				boolean canspeak = true;
 				
 				int[] currsig = new int[SIGNALS];
@@ -396,458 +382,483 @@ public class LoadActivity extends Activity {
 				
 				boolean firstrun = true;
 				
-				while (success == false && isvalid == true && countdown > 0) {
-					
-					boolean foundpoint = false;
-					int maxmistakes = 1;
-					int trials = 0;
-					setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
-					
-					while (foundpoint == false) {
+				while (success == false && isvalid == true && countdown > 0 && cancelled == false) {
+
+					try {
 						
-						trials++;
-						if ((trials % 10) % 2 == 0) {
-							maxmistakes++;
-						}
+						boolean foundpoint = false;
+						int maxmistakes = 1;
+						int trials = 0;
+						messageticker--;
+						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
 						
-						for(int i=0; i<SIGNALS; i++)
-							thisscan[i] = -1;
-				
-						if (wasEnabled2 == true){ //Recheck WiFi availability, safety measure
-							for(int z=0; z<tests; z++) {
-								
-								for(int i=0; i<SIGNALS; i++)
-									thisscan[i] = -1;
-								
-								if(myWifiManager2.startScan()){ //Can we start?
-									// List available APs
-									List<ScanResult> scans = myWifiManager2.getScanResults();
-									if (scans != null && !scans.isEmpty()){
-										for (ScanResult scan : scans) {
-											int found = -1;
-											
-											for(int i=0; i<SIGNALS; i++) {
-												if (ids[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
-													found = i;
+						while (foundpoint == false && maxmistakes < 10) {
+							
+							for(int i=0; i<SIGNALS; i++)
+								thisscan[i] = -1;
+					
+							if (wasEnabled2 == true){ //Recheck WiFi availability, safety measure
+								for(int z=0; z<tests; z++) {
+									
+									for(int i=0; i<SIGNALS; i++)
+										thisscan[i] = -1;
+									
+									if(myWifiManager2.startScan()){ //Can we start?
+										// List available APs
+										List<ScanResult> scans = myWifiManager2.getScanResults();
+										if (scans != null && !scans.isEmpty()){
+											for (ScanResult scan : scans) {
+												int found = -1;
+												
+												for(int i=0; i<SIGNALS; i++) {
+													if (ids[i].compareTo(scan.BSSID) == 0) { //Check each target to see if match
+														found = i;
+													}
 												}
+												
+												if (found > -1) {
+													thisscan[found] = WifiManager.calculateSignalLevel(scan.level, LEVELS);
+												}
+												
 											}
-											
-											if (found > -1) {
-												thisscan[found] = WifiManager.calculateSignalLevel(scan.level, LEVELS);
-											}
-											
 										}
 									}
+									
+									for(int i=0; i<SIGNALS; i++)
+										currsig[i] = currsig[i] + thisscan[i];
+									
 								}
+							}
+		
+							for(int q=0; q<SIGNALS; q++) {
+								currsig[q] = (int) Math.ceil(currsig[q]/tests);
+							}					
+							
+							//Location determination starts here...
+							//Let's derive a start node, now that all of the nodes have been read in.
+					
+					        startnode = 0; //need to generate
+					        calcs = new double[mapsize];
+					        
+					        newstep = false; //did we change positions?
+					        
+					        boolean isthere[][] = new boolean[SIGNALS][mapsize];
+					        boolean isus[] = new boolean[SIGNALS];
+					        
+					        for (int i=0; i<SIGNALS; i++) {
+					        	if (currsig[i] > -1)
+					        		isus[i] = true;
+					        	else
+					        		isus[i] = false;
+					        }
+					        
+					        for (int i=0; i<SIGNALS; i++) {
+						        for (int j=0; j<mapsize; j++) {
+						        	if (nodess[i][j] > -1)
+						        		isthere[i][j] = true;
+						        	else
+						        		isthere[i][j] = false;
+						        }			        	
+					        }
+					        
+					        //Currsig[0-2] is our signal, nodess1-3 is the signal strength of each node 0 to n-1 
+							for(int i=0; i<mapsize; i++) {
+								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
+									
+									int mistakes = 0;
+									int pow = 2;
+									
+									for (int j=0; j<SIGNALS; j++) {
+										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
+											mistakes++;
+									}
+									
+									if (mistakes > maxmistakes) {
+										calcs[i] = -1;
+									}
+									else {
+										for (int j=0; j<SIGNALS; j++) {
+											calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
+										}
+										double heur = 1;
+										if (lastnode > -1)
+											heur = Math.sqrt(Math.sqrt(Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))))); //additive heuristic 
+										
+										calcs[i] = heur * Math.sqrt(calcs[i]);
+										
+										foundpoint = true;
+									}
+		
+								}
+								else
+									calcs[i] = -1; //don't consider if not on the floor.
 								
-								for(int i=0; i<SIGNALS; i++)
-									currsig[i] = currsig[i] + thisscan[i];
-								
+							}        
+					        //Calculate closest distance (above)
+							
+							trials++;
+							if ((trials % 10) % 2 == 0) {
+								maxmistakes++;
+							}
+							if (foundpoint == false) {
+						        try {
+						            Thread.sleep(500*maxmistakes);
+						        } 
+						        catch (InterruptedException e) {
+						        	e.printStackTrace();
+						        }
 							}
 						}
-	
-						for(int q=0; q<SIGNALS; q++) {
-							currsig[q] = (int) Math.ceil(currsig[q]/tests);
-						}					
 						
-						//Location determination starts here...
-						//Let's derive a start node, now that all of the nodes have been read in.
-				
-				        startnode = 0; //need to generate
-				        calcs = new double[mapsize];
-				        
-				        newstep = false; //did we change positions?
-				        
-				        boolean isthere[][] = new boolean[SIGNALS][mapsize];
-				        boolean isus[] = new boolean[SIGNALS];
-				        
-				        for (int i=0; i<SIGNALS; i++) {
-				        	if (currsig[i] > -1)
-				        		isus[i] = true;
-				        	else
-				        		isus[i] = false;
-				        }
-				        
-				        for (int i=0; i<SIGNALS; i++) {
-					        for (int j=0; j<mapsize; j++) {
-					        	if (nodess[i][j] > -1)
-					        		isthere[i][j] = true;
-					        	else
-					        		isthere[i][j] = false;
-					        }			        	
-				        }
-				        
-				        //Currsig[0-2] is our signal, nodess1-3 is the signal strength of each node 0 to n-1 
-						for(int i=0; i<mapsize; i++) {
-							if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
-								
-								int mistakes = 0;
-								int pow = 2;
-								
-								for (int j=0; j<SIGNALS; j++) {
-									if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
-										mistakes++;
-								}
-								
-								if (mistakes > maxmistakes) {
-									calcs[i] = -1;
-								}
-								else {
-									for (int j=0; j<SIGNALS; j++) {
-										calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
-									}
-									double heur = 1;
-									if (lastnode > -1)
-										heur = Math.sqrt(Math.sqrt(Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))))); //additive heuristic 
-									
-									calcs[i] = heur * Math.sqrt(calcs[i]);
-									
-									foundpoint = true;
-								}
-	
-								/*calcs[i] = signalDistance(currsig[0], currsig[1], currsig[2], currsig[3], nodess1[i], nodess2[i], nodess3[i], nodess4[i]);
-								//scale by distance from last node - the further you are from the last node, the less chance you are there
-								if (lastnode > -1) {
-									double heur = Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic 
-									
-									if (nextnode == i) //optimism
-										heur = heur/1.25;
-									
-									calcs[i] = calcs[i]*heur;
-	
-								}*/
-	
-							}
-							else
-								calcs[i] = -1; //don't consider if not on the floor.
-							
-						}        
-				        //Calculate closest distance (above)
-						
-					}
-					
-					//get the last position, for voice
-					lastnode = currnode;
-					
-					
-					
-					startnode = currnode;
-					int closestnode = -1; //the candidate for switching		
-					
-					for(int i=0; i<mapsize; i++) {
-						if (closestnode == -1 && calcs[i] > -1)
-							closestnode = i; //first instance of a valid comparison
-							
-					}
-					for(int i=0; i<mapsize; i++) {
-						if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
-							closestnode = i;
-
-					}
-					
-					//check closestnode
-					if (stucknode == -1) { //if first run, set sticking point, where one is
-						stickiness = 2;
-						startnode = closestnode;
-						stucknode = closestnode;
-						sticknode = -1;
-						newstep = true;
-					}
-					else {
-						if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
-							sticknode = closestnode;
-							stickiness = 2;
+						if (maxmistakes >= 10) {
+							cancelled = true;
+							notav = true;
+							Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
+							Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+							publishProgress(bitmap);
 						}
 						else {
-							if (closestnode == sticknode) { //If tests match, iterate towards updating location
-								stickiness--;
-								if (stickiness == 0) {
-									startnode = closestnode;
-									stucknode = closestnode;
-									sticknode = -1;
-									stickiness = 2;
-									newstep = true;
-									canspeak = true;
-								}								
-							}
-							else { //reset
-								sticknode = closestnode;
-								stickiness = 2;
-							}
-						}
-					}
-					
-					//set the current location
-					startnode = stucknode;
-					
-					//set for voice
-					currnode = startnode;
-					
-					//All nodes have been read
-					//Lets generate neighbors from the next file
-					InputStream is2 = getResources().openRawResource(R.raw.neighbors);
-					InputStreamReader isr2 = new InputStreamReader(is2);
-					BufferedReader br2 = new BufferedReader(isr2);	
-					
-					try {
-						String str = br2.readLine(); //Reads the number of nodes - should be the same as before
-						mapsize = Integer.parseInt(str);
 						
-						str = br2.readLine(); //Discards hash
-					} 
-					catch (IOException e) {
-						finish(); //should not reach here
-					}
-					
-					int djsize = (1+fends[floor-2]-fstarts[floor-2]);
-					//update path generation - create a map of the right size (
-					
-					EdgeWeightedDigraph dg = new EdgeWeightedDigraph(mapsize);
-					
-					try { //Gets every set of neighbors for each node as in the neighbors file
-						for (int i=0; i< mapsize; i++) {
-							String str = br2.readLine(); //Reads in data
-							while (str.compareTo("#########") != 0) {
-								int j = Integer.parseInt(str);
-								if (i != j) { //Double checking neighbor with self case - should not occur on well-made file
-									double dist = Math.sqrt(((nodex[i]-nodex[j])*(nodex[i]-nodex[j]))+((nodey[i]-nodey[j])*(nodey[i]-nodey[j])));
-									dist = Math.sqrt(dist);
+							//get the last position, for voice
+							lastnode = currnode;
+							startnode = currnode;
+							int closestnode = -1; //the candidate for switching		
+							
+							for(int i=0; i<mapsize; i++) {
+								if (closestnode == -1 && calcs[i] > -1)
+									closestnode = i; //first instance of a valid comparison
 									
-									DirectedEdge e = new DirectedEdge(i, j, dist);
-									dg.addEdge(e);
-									
+							}
+							for(int i=0; i<mapsize; i++) {
+								if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
+									closestnode = i;
+		
+							}
+							
+							final int maxstick = 2;
+							
+							//check closestnode
+							if (stucknode == -1) { //if first run, set sticking point, where one is
+								stickiness = maxstick;
+								startnode = closestnode;
+								stucknode = closestnode;
+								sticknode = -1;
+								newstep = true;
+							}
+							else {
+								if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
+									sticknode = closestnode;
+									stickiness = maxstick;
 								}
-								str = br2.readLine();
+								else {
+									if (closestnode == sticknode) { //If tests match, iterate towards updating location
+										stickiness--;
+										if (stickiness == 0) {
+											startnode = closestnode;
+											stucknode = closestnode;
+											sticknode = -1;
+											stickiness = maxstick;
+											newstep = true;
+											canspeak = true;
+										}								
+									}
+									else { //reset
+										sticknode = closestnode;
+										stickiness = maxstick;
+									}
+								}
+							}
+							
+							//set the current location
+							startnode = stucknode;
+							
+							//set for voice
+							currnode = startnode;
+							
+							//All nodes have been read
+							//Lets generate neighbors from the next file
+							InputStream is2 = getResources().openRawResource(R.raw.neighbors);
+							InputStreamReader isr2 = new InputStreamReader(is2);
+							BufferedReader br2 = new BufferedReader(isr2);	
+							
+							try {
+								String str = br2.readLine(); //Reads the number of nodes - should be the same as before
+								mapsize = Integer.parseInt(str);
+								
+								str = br2.readLine(); //Discards hash
+							} 
+							catch (IOException e) {
+								finish(); //should not reach here
+							}
+							
+							int djsize = (1+fends[floor-2]-fstarts[floor-2]);
+							//update path generation - create a map of the right size (
+							
+							EdgeWeightedDigraph dg = new EdgeWeightedDigraph(mapsize);
+							
+							try { //Gets every set of neighbors for each node as in the neighbors file
+								for (int i=0; i< mapsize; i++) {
+									String str = br2.readLine(); //Reads in data
+									while (str.compareTo("#########") != 0) {
+										int j = Integer.parseInt(str);
+										if (i != j) { //Double checking neighbor with self case - should not occur on well-made file
+											double dist = Math.sqrt(((nodex[i]-nodex[j])*(nodex[i]-nodex[j]))+((nodey[i]-nodey[j])*(nodey[i]-nodey[j])));
+											dist = Math.sqrt(dist);
+											
+											DirectedEdge e = new DirectedEdge(i, j, dist);
+											dg.addEdge(e);
+											
+										}
+										str = br2.readLine();
+									}
+								}
+							} 
+							catch (IOException e) {
+								finish(); //should not reach here either
+							}		
+							
+							if (startnode == targetnode) {
+								success = true;
+							}
+							else {
+								//Create Map with this info (9)
+								DijkstraSP distances = new DijkstraSP(dg,startnode);
+						        
+								//Work with it
+								int[] pathstarts;
+								int[] pathends;
+								int counting = 0;
+								
+						        //Unless the map is poorly constructed, this won't fail
+							
+						        for (DirectedEdge e : distances.pathTo(targetnode)) {
+						            counting++;
+						        }
+						        
+						        pathstarts = new int[counting];
+						        pathends = new int[counting];
+						        counting--;
+						        int linecount = 0;
+						    	
+						        for (DirectedEdge e : distances.pathTo(targetnode)) { //Read in the start and end of each node in the shortest path to draw it
+						            pathstarts[counting] = e.from();
+						            pathends[counting] = e.to();               
+						            linecount++;
+						            counting--;
+						        }
+						
+						        // The image is coming from resource folder but it could also 
+						        // load from the Internet or whatever
+						        
+						        Drawable drawable;
+						        
+						        switch (floor) {
+						        	case 2:
+						        		drawable = getResources().getDrawable(R.drawable.f2);
+						        		break;
+						        	case 3:
+						        		drawable = getResources().getDrawable(R.drawable.f3);
+						        		break;
+						        	default:
+						        		drawable = getResources().getDrawable(R.drawable.f4);
+						        		break; //this will be for 4, the only other choice
+						        }
+						        
+						        double mult = 1;
+						        //we could toggle but there's the leak
+						        
+						        Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+						
+						        //Determine scaling factor
+						        int imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
+						        float factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
+						        
+						        int nh = (int)(bitmap.getHeight()*factor*mult);
+						        int nw = (int)(bitmap.getWidth()*factor*mult);
+						        
+						        // Create a new bitmap with the scaling factor
+						        //zoom the drawable if zoom option is on
+						        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
+						
+						        //Create another bitmap to draw on
+						        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        Canvas tempCanvas = new Canvas(tempBitmap);
+						        
+						        //Turn the canvas back to a new bitmap
+						        Bitmap linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        tempCanvas.setBitmap(linemap);
+						        //Works as we go
+						        
+						        myPaint.setColor(Color.BLACK);
+						        BLUE.setColor(Color.BLUE);
+						        GREEN.setColor(Color.GREEN);
+						        
+						        myPaint.setStrokeWidth((float) (10*mult)); //make the lines bigger, will only affect the directional lines
+						        
+						        //do again for crown
+						        
+						        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
+						        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
+						        int imgh = (int)(imgmap.getHeight()*factor*mult);
+						        int imgw = (int)(imgmap.getWidth()*factor*mult);
+						        
+						        float firstx = scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw);
+						        
+						        if (firstrun == true && firstx > getWindowManager().getDefaultDisplay().getWidth())
+						        	reminder = true;
+						        else
+						        	reminder = false;
+						        	
+						        firstrun = false;
+						        
+						        //Draw the image bitmap into the canvas
+						        
+						        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
+						        
+						        //Draw Lines
+						        for (int i=0; i<linecount; i++) {
+						        	float sx = scale((float)nodex[pathstarts[i]], FLOORWIDTH, nw);
+						        	float sy = scale((float)nodey[pathstarts[i]], FLOORHEIGHT, nh);
+						        	float ex = scale((float)nodex[pathends[i]], FLOORWIDTH, nw);
+						        	float ey = scale((float)nodey[pathends[i]], FLOORHEIGHT, nh);   	
+						        	tempCanvas.drawLine(sx, sy, ex, ey, myPaint);
+						        	
+						        	nextnode = pathends[0];
+						        }
+						        
+						        Bitmap newimgmap = Bitmap.createScaledBitmap(imgmap, imgw, imgh, false);
+						        
+						        //Draw full map
+						        tempCanvas.drawCircle(firstx, scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
+						        tempCanvas.drawBitmap(newimgmap, (scale((float)nodex[pathends[0]], FLOORWIDTH, nw) - (imgw/2)), (scale((float)nodey[pathends[0]], FLOORHEIGHT, nh) - (imgh/2)), GREEN);
+						        
+						        //try to play sound
+						        boolean left = false;
+						        boolean right = false;
+						        
+						        messagetype = 0;
+	
+						        if (!left && !right && canspeak && messageticker <= 0) { //if no turns, check for obstacles
+						        	
+						        	int ostart = 0;
+						        	//oends[bestmatch-2]
+						        	if (finalmatch > 2) {
+						        		ostart = oends[finalmatch-3] + 1;
+						        	}
+						        	
+						        	for (int i=0; i<obs; i++) {
+						        		if (realDistance(nodex[currnode], nodey[currnode], ox[i], oy[i]) < or[i]*1.5 && i >= ostart && i <= oends[finalmatch-2]) {
+						        			//obstacle!
+						        			//check left/right and stuff
+									        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
+									            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+									            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+									            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+									            float volume = streamVolumeCurrent / streamVolumeMax;
+									            canspeak = false;
+									            messageticker = 10;
+			
+									            if (voice) {
+									            	pool.play(soundsMap.get(3), volume, volume, 1, 0, 1); 
+									            }
+									            if (words) {
+									            	messagetype = 11;
+									            }
+									        	break;
+									        }
+									        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] >= ox[i])) {
+									            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+									            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+									            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+									            float volume = streamVolumeCurrent / streamVolumeMax;
+									            canspeak = false;
+									            messageticker = 10;
+									            
+									            if (voice) {
+									            	pool.play(soundsMap.get(4), volume, volume, 1, 0, 1); 
+									            }
+									            if (words) {
+									            	messagetype = 12;
+									            }
+									        	break;
+									        }	
+						        		}
+						        	}
+						        }					        
+						        
+						        //nodex, nodey
+						        if (currnode > -1 && nextnode > -1 && lastnode > -1 && newstep == true) {
+							        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode])) {
+							        	left = true;
+							        }
+							        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode])) {
+							        	right = true;
+							        }
+						        }
+						        if (left && canspeak && messageticker <= 0) {
+						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+						            float volume = streamVolumeCurrent / streamVolumeMax; 
+						            canspeak = false;
+						            messageticker = 10;
+			
+						            if (voice) {
+						            	pool.play(soundsMap.get(1), volume, volume, 1, 0, 1); 
+						            }
+						            if (words) {
+						            	messagetype = 1;
+						            }
+						            
+						        }
+						        if (right && canspeak  && messageticker <= 0) {
+						            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+						            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
+						            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+						            float volume = streamVolumeCurrent / streamVolumeMax;
+						            canspeak = false;
+						            messageticker = 10;
+			
+						            if (voice) {
+						            	pool.play(soundsMap.get(2), volume, volume, 1, 0, 1); 
+						            } 
+						            if (words) {
+						            	messagetype = 2;
+						            }
+						        }
+						        			        
+						        try {
+						            Thread.sleep(100);
+						        } 
+						        catch (InterruptedException e) {
+						        	e.printStackTrace();
+						        }
+						        
+						        if (currnode == targetnode || startnode == targetnode) {
+						        	success = true;
+						        }
+						        //cancelled = true;
+						        if (cancelled == true)
+						        	this.cancel(true);
+						        
+						        countdown--;
+						        publishProgress(linemap);
+						        
 							}
 						}
-					} 
-					catch (IOException e) {
-						finish(); //should not reach here either
-					}		
-					
-					if (startnode == targetnode) {
-						success = true;
 					}
-					else {
-						//Create Map with this info (9)
-						DijkstraSP distances = new DijkstraSP(dg,startnode);
-				        
-						//Work with it
-						int[] pathstarts;
-						int[] pathends;
-						int counting = 0;
-						
-				        //Unless the map is poorly constructed, this won't fail
 					
-				        for (DirectedEdge e : distances.pathTo(targetnode)) {
-				            counting++;
-				        }
-				        
-				        pathstarts = new int[counting];
-				        pathends = new int[counting];
-				        counting--;
-				        int linecount = 0;
-				    	
-				        for (DirectedEdge e : distances.pathTo(targetnode)) { //Read in the start and end of each node in the shortest path to draw it
-				            pathstarts[counting] = e.from();
-				            pathends[counting] = e.to();               
-				            linecount++;
-				            counting--;
-				        }
-				
-				        // The image is coming from resource folder but it could also 
-				        // load from the Internet or whatever
-				        
-				        Drawable drawable;
-				        
-				        switch (floor) {
-				        	case 2:
-				        		drawable = getResources().getDrawable(R.drawable.f2);
-				        		break;
-				        	case 3:
-				        		drawable = getResources().getDrawable(R.drawable.f3);
-				        		break;
-				        	default:
-				        		drawable = getResources().getDrawable(R.drawable.f4);
-				        		break; //this will be for 4, the only other choice
-				        }
-				        
-				        double mult = 1;
-				        //we could toggle but there's the leak
-				        
-				        Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
-				
-				        //Determine scaling factor
-				        int imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
-				        float factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
-				        
-				        int nh = (int)(bitmap.getHeight()*factor*mult);
-				        int nw = (int)(bitmap.getWidth()*factor*mult);
-				        
-				        // Create a new bitmap with the scaling factor
-				        //zoom the drawable if zoom option is on
-				        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
-				
-				        //Create another bitmap to draw on
-				        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
-				        Canvas tempCanvas = new Canvas(tempBitmap);
-				        
-				        //Turn the canvas back to a new bitmap
-				        Bitmap linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
-				        tempCanvas.setBitmap(linemap);
-				        //Works as we go
-				        
-				        myPaint.setColor(Color.BLACK);
-				        BLUE.setColor(Color.BLUE);
-				        GREEN.setColor(Color.GREEN);
-				        
-				        myPaint.setStrokeWidth((float) (10*mult)); //make the lines bigger, will only affect the directional lines
-				        
-				        //do again for crown
-				        
-				        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
-				        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
-				        int imgh = (int)(imgmap.getHeight()*factor*mult);
-				        int imgw = (int)(imgmap.getWidth()*factor*mult);
-				        
-				        float firstx = scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw);
-				        
-				        if (firstrun == true && firstx > getWindowManager().getDefaultDisplay().getWidth())
-				        	reminder = true;
-				        else
-				        	reminder = false;
-				        	
-				        firstrun = false;
-				        
-				        //Draw the image bitmap into the canvas
-				        
-				        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
-				        
-				        //Draw Lines
-				        for (int i=0; i<linecount; i++) {
-				        	float sx = scale((float)nodex[pathstarts[i]], FLOORWIDTH, nw);
-				        	float sy = scale((float)nodey[pathstarts[i]], FLOORHEIGHT, nh);
-				        	float ex = scale((float)nodex[pathends[i]], FLOORWIDTH, nw);
-				        	float ey = scale((float)nodey[pathends[i]], FLOORHEIGHT, nh);   	
-				        	tempCanvas.drawLine(sx, sy, ex, ey, myPaint);
-				        	
-				        	nextnode = pathends[0];
-				        }
-				        
-				        Bitmap newimgmap = Bitmap.createScaledBitmap(imgmap, imgw, imgh, false);
-				        
-				        //Draw full map
-				        tempCanvas.drawCircle(firstx, scale((float)nodey[pathstarts[linecount-1]], FLOORHEIGHT, nh), 10, BLUE); //Draw Circle at start spot
-				        tempCanvas.drawBitmap(newimgmap, (scale((float)nodex[pathends[0]], FLOORWIDTH, nw) - (imgw/2)), (scale((float)nodey[pathends[0]], FLOORHEIGHT, nh) - (imgh/2)), GREEN);
-				        
-				        //try to play sound
-				        boolean left = false;
-				        boolean right = false;
-				        
-				        messagetype = 0;
-	 
-				        //nodex, nodey
-				        if (currnode > -1 && nextnode > -1 && lastnode > -1 && newstep == true) {
-					        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode])) {
-					        	left = true;
-					        }
-					        if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[nextnode]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[nextnode]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[nextnode]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[nextnode])) {
-					        	right = true;
-					        }
-				        }
-				        if (left && canspeak) {
-				            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-				            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
-				            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-				            float volume = streamVolumeCurrent / streamVolumeMax; 
-				            canspeak = false;
-	
-				            if (voice) {
-				            	pool.play(soundsMap.get(1), volume, volume, 1, 0, 1); 
-				            }
-				            if (words) {
-				            	messagetype = 1;
-				            }
-				            
-				        }
-				        if (right && canspeak) {
-				            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-				            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
-				            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-				            float volume = streamVolumeCurrent / streamVolumeMax;
-				            canspeak = false;
-	
-				            if (voice) {
-				            	pool.play(soundsMap.get(2), volume, volume, 1, 0, 1); 
-				            } 
-				            if (words) {
-				            	messagetype = 2;
-				            }
-				        }
-				        
-				        if (!left && !right && canspeak) { //if no turns, check for obstacles
-				        	
-				        	int ostart = 0;
-				        	//oends[bestmatch-2]
-				        	if (finalmatch > 2) {
-				        		ostart = oends[finalmatch-3] + 1;
-				        	}
-				        	
-				        	for (int i=0; i<obs; i++) {
-				        		if (realDistance(nodex[currnode], nodey[currnode], ox[i], oy[i]) < or[i] && i >= ostart && i <= oends[finalmatch-2]) {
-				        			//obstacle!
-				        			//check left/right and stuff
-							        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
-							            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-							            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
-							            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-							            float volume = streamVolumeCurrent / streamVolumeMax;
-							            canspeak = false;
-	
-							            if (voice) {
-							            	pool.play(soundsMap.get(3), volume, volume, 1, 0, 1); 
-							            }
-							            if (words) {
-							            	messagetype = 1;
-							            }
-							        	break;
-							        }
-							        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] >= ox[i])) {
-							            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
-							            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
-							            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-							            float volume = streamVolumeCurrent / streamVolumeMax;
-							            canspeak = false;
-	
-							            if (voice) {
-							            	pool.play(soundsMap.get(4), volume, volume, 1, 0, 1); 
-							            }
-							            if (words) {
-							            	messagetype = 2;
-							            }
-							        	break;
-							        }	
-				        		}
-				        	}
-				        }
-				        
-	  
-				        
-				        try {
-				            Thread.sleep(250);
-				        } 
-				        catch (InterruptedException e) {
-				        	e.printStackTrace();
-				        }
-				        
-				        if (currnode == targetnode || startnode == targetnode) {
-				        	success = true;
-				        }
-				        
-				        countdown--;
-				        publishProgress(linemap);
+					catch (Exception e) {
+						//estring = e.toString();
+						cancelled = true;
+						Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
+						Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+						publishProgress(bitmap);
 					}
+			
 				}
+				
+				//Each of these give a sort of last step, so that the message can be displayed
 				if (success == true) {
 		            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 		            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
@@ -855,10 +866,25 @@ public class LoadActivity extends Activity {
 		            float volume = streamVolumeCurrent / streamVolumeMax;
 		            if (voice) {
 		            	pool.play(soundsMap.get(5), volume, volume, 1, 0, 1); //needs to be 5
-		            }				
+		            }
+		            
+					Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
+					Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+					publishProgress(bitmap);
+		            
+				}
+				if (cancelled == true) {
+					Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
+					Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+					publishProgress(bitmap);
+			        this.cancel(true);
 				}
 				finish();
 				return null;
+				
+				
+				
+				
 			}
 
 			@Override
@@ -866,15 +892,31 @@ public class LoadActivity extends Activity {
 				imageView.setImageBitmap(result[0]);
 				
 				if (messagetype == 1) {
-					Toast.makeText(now, "Turn Left.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(now, "Turn Left.", Toast.LENGTH_LONG).show();
 				}
 				if (messagetype == 2) {
-					Toast.makeText(now, "Turn Right.", Toast.LENGTH_SHORT).show();
+					Toast.makeText(now, "Turn Right.", Toast.LENGTH_LONG).show();
 				}	
+				
+				if (messagetype == 11) {
+					Toast.makeText(now, "Obstacle in area. Move Left.", Toast.LENGTH_LONG).show();
+				}
+				if (messagetype == 12) {
+					Toast.makeText(now, "Obstacle in area. Move Right.", Toast.LENGTH_LONG).show();
+				}				
 				
 				if (reminder == true)
 					Toast.makeText(now, "Scroll right to see your location", Toast.LENGTH_LONG).show();
 				
+				if (notav == true || (cancelled == true && butcan == false))
+					Toast.makeText(now, "Wifi not availible. Try again in a few moments.", Toast.LENGTH_LONG).show();
+				
+				if (success == true)
+					Toast.makeText(now, "You have arrived at your destination.", Toast.LENGTH_LONG).show();
+				
+				if (estring != "")
+					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
+					
 			}
 			
 			
@@ -882,7 +924,6 @@ public class LoadActivity extends Activity {
 		
 		Void v = null;
 		math.execute(v);
-
         
     }   
 
@@ -908,6 +949,13 @@ public class LoadActivity extends Activity {
     	
     	return Math.sqrt((Math.abs(cx-ox)*Math.abs(cx-ox)) + (Math.abs(cy-oy)*Math.abs(cy-oy)));
     	
+    }
+    
+    @Override
+    public void onBackPressed() {
+        //don't go back immediately, it'll mess everything up due to asyncs
+    	cancelled = true;
+    	butcan = true;
     }
     
 }

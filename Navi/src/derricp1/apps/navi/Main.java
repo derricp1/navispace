@@ -307,5 +307,10 @@ public class Main extends Activity {
 		startActivity(intent);
 	}
 	
+    @Override
+    public void onBackPressed() {
+        //don't go back, it'll mess everything up due to asyncs
+    }
+	
 }
 
