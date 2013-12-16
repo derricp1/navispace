@@ -7,14 +7,10 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.math.*;
-
-//import derricp1.test.R;
-
+import android.hardware.*;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.wifi.ScanResult;
