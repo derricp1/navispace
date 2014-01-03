@@ -19,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.*;
 import android.graphics.Bitmap.Config;
@@ -26,8 +27,9 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.*;
 import android.media.*;
+import android.hardware.*;
 
-public class LoadActivity extends Activity {
+public class LoadActivity extends Activity implements SensorEventListener {
 
 	public final int LEVELS = 100; //Scaling factor for strength
 	public final int SIGNALS = 10; //number of signals used for the comparison
@@ -63,15 +65,53 @@ public class LoadActivity extends Activity {
     private boolean cancelled = false;
     private boolean butcan = false;
     private boolean notav = false;
+    
+    
+    
+    //accelerometer stuff
+    public int holdcycles = 0;
+	public float NOISE = (float) 0.3;
+	public float alpha = (float) 0.8;
+
+	private boolean mInitialized = false;
+	
+	private SensorManager mSensorManager;
+	private Sensor mAccelerometer;
+	private SensorManager mSensorManager2;
+	private Sensor mGyroscope;
+	
+	private float mLastX, mLastY, mLastZ;
+	private float gravity[];
+	private float rx = 0, ry = 0, rz = 0;
+	private float lockedx = 0;
+	
+	private boolean dleft = false;
+	private boolean dright = false;
+	private boolean dturn = false;
+	private boolean willturn = false;
 
     @SuppressLint("NewApi")
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        //Let's draw the map.
-        setContentView(R.layout.activity_load);
+        //More sensor stuff
+		mInitialized = false;
+		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		mSensorManager2 = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		mGyroscope = mSensorManager2.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+		
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager2.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+		
+		gravity = new float[3];
+		for (int i=0; i<3; i++)
+			gravity[i] = (float) 9.8;
+		//Return to normal
         
+
+        setContentView(R.layout.activity_load);      
         this.imageView = (ImageView)findViewById(R.id.scroller); //Read in the view that lets us scroll the map
 
         //sound
@@ -222,11 +262,11 @@ public class LoadActivity extends Activity {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
-			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
-			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
-			vare = false;
-		}
+		//if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+		//	String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
+		//	Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
+		//	vare = false;
+		//}
 		
 		if (vare == false) {
 			finish();
@@ -382,6 +422,14 @@ public class LoadActivity extends Activity {
 
 					try {
 						
+						//only matters for messages, and will be deleted
+						dleft = false;
+						dright = false;
+						dturn = false;
+						
+						if (holdcycles > 0)
+							holdcycles--;
+						
 						boolean foundpoint = false;
 						int maxmistakes = 1;
 						int trials = 0;
@@ -457,12 +505,57 @@ public class LoadActivity extends Activity {
 						        }			        	
 					        }
 					        
+					        //
+					        //
+					        //if there is a valid turn signal, get neighbors ready
+					        int[][] neighbors = new int[mapsize][4];
+					        for (int p=0; p<mapsize; p++)
+					        	for (int q=0; q<4; q++)
+					        		neighbors[p][q] = -1;
+					        	
+							if (stucknode != -1 && Math.abs(rx) > NOISE) {
+								InputStream is3 = getResources().openRawResource(R.raw.neighbors);
+								InputStreamReader isr3 = new InputStreamReader(is3);
+								BufferedReader br3 = new BufferedReader(isr3);	
+
+								try {
+									String str = br3.readLine(); //Reads the number of nodes - should be the same as before
+									mapsize = Integer.parseInt(str);
+									
+									str = br3.readLine(); //Discards hash
+								} 
+								catch (IOException e) {
+									finish(); //should not reach here
+								}
+
+								try { //Gets every set of neighbors for each node as in the neighbors file
+									for (int ii=0; ii < mapsize; ii++) {
+										int ncount = 0;
+										String stri = br3.readLine(); //Reads in data
+										while (stri.compareTo("#########") != 0) {
+											int j = Integer.parseInt(stri);
+											if (ii != j) { //Double checking neighbor with self case - should not occur on well-made file
+												neighbors[ii][ncount] = j;
+											}
+											stri = br3.readLine();
+										}
+									}
+								} 
+								catch (IOException e) {
+									finish(); //should not reach here either
+								}								
+							}
+							//
+							//
+							//Done checking and doing if needed
+					        
+							//Move on to trying to find a proper signal
 					        //Currsig[0-2] is our signal, nodess1-3 is the signal strength of each node 0 to n-1 
 							for(int i=0; i<mapsize; i++) {
 								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 									
 									int mistakes = 0;
-									int pow = 2;
+									int pow = 5;
 									
 									for (int j=0; j<SIGNALS; j++) {
 										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
@@ -478,9 +571,43 @@ public class LoadActivity extends Activity {
 										}
 										double heur = 1;
 										if (lastnode > -1)
-											heur = Math.sqrt(Math.sqrt(Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))))); //additive heuristic 
+											heur = Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
+										
+										//
+										//take the rotation into account
+										//
+										
+										int cn = currnode;
+										int ln = lastnode;
+										
+										float rot = lockedx;
+										if (currnode > -1 && Math.abs(rot) > NOISE) { //not first run (needs to reset)
+											for (int f=0; f<4; f++) {
+												
+												if (neighbors[currnode][f] == i && currnode > -1 && lastnode > -1) { //the current node to check in a neighbor of the current location
+													boolean left = false;
+													boolean right = false;
+													
+													if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
+														left = true;
+														dleft = true; //for testing, delete later
+														willturn = true;
+													}
+													if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
+														right = true;
+														dright = true; //for testing, delete later
+														willturn = true;
+													}
+													//the turning may have to be rethought to have a sort of history
+													//scale calcs[i] if turning
+													if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
+														calcs[i] = 0;
+													}
+												}	
+											}
+										}
 										
 										foundpoint = true;
 									}
@@ -505,6 +632,9 @@ public class LoadActivity extends Activity {
 						        }
 							}
 						}
+						
+						//Reset position here so that max time to actually use them
+						lockedx = 0;
 						
 						if (maxmistakes >= 10) {
 							cancelled = true;
@@ -542,9 +672,13 @@ public class LoadActivity extends Activity {
 								newstep = true;
 							}
 							else {
-								if (sticknode == -1) { //shouldn't happen in normal use, but kept to catch errors and reset
-									sticknode = closestnode;
+								if (willturn == true) { //turning via gyro overrides sticking
+									startnode = closestnode;
+									stucknode = closestnode;
+									sticknode = -1;
 									stickiness = maxstick;
+									newstep = true;
+									canspeak = true;									
 								}
 								else {
 									if (closestnode == sticknode) { //If tests match, iterate towards updating location
@@ -564,6 +698,8 @@ public class LoadActivity extends Activity {
 									}
 								}
 							}
+							//doesn't matter anymore
+							willturn = false;
 							
 							//set the current location
 							startnode = stucknode;
@@ -587,7 +723,6 @@ public class LoadActivity extends Activity {
 								finish(); //should not reach here
 							}
 							
-							int djsize = (1+fends[floor-2]-fstarts[floor-2]);
 							//update path generation - create a map of the right size (
 							
 							EdgeWeightedDigraph dg = new EdgeWeightedDigraph(mapsize);
@@ -734,7 +869,7 @@ public class LoadActivity extends Activity {
 						        
 						        messagetype = 0;
 	
-						        if (!left && !right && canspeak && messageticker <= 0) { //if no turns, check for obstacles
+						        if (!left && !right && canspeak && messageticker <= 0 && currnode > -1 && lastnode > -1) { //if no turns, check for obstacles
 						        	
 						        	int ostart = 0;
 						        	//oends[bestmatch-2]
@@ -746,7 +881,7 @@ public class LoadActivity extends Activity {
 						        		if (realDistance(nodex[currnode], nodey[currnode], ox[i], oy[i]) < or[i]*1.5 && i >= ostart && i <= oends[finalmatch-2]) {
 						        			//obstacle!
 						        			//check left/right and stuff
-									        if ((nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
+									        if ((nodex[currnode] >= nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] <= oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] >= ox[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > oy[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] < nodey[lastnode] && nodex[currnode] < ox[i])) {
 									            AudioManager mgr = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
 									            float streamVolumeCurrent = mgr.getStreamVolume(AudioManager.STREAM_MUSIC);
 									            float streamVolumeMax = mgr.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
@@ -824,7 +959,7 @@ public class LoadActivity extends Activity {
 						        }
 						        			        
 						        try {
-						            Thread.sleep(100);
+						            Thread.sleep(50);
 						        } 
 						        catch (InterruptedException e) {
 						        	e.printStackTrace();
@@ -912,6 +1047,13 @@ public class LoadActivity extends Activity {
 				
 				if (estring != "")
 					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
+				
+				if (dleft == true)
+					Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
+				if (dright == true)
+					Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
+				if (dturn == true)
+					Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
 					
 			}
 			
@@ -953,5 +1095,52 @@ public class LoadActivity extends Activity {
     	cancelled = true;
     	butcan = true;
     }
+
+	@Override
+	public void onAccuracyChanged(Sensor arg0, int arg1) {
+		//not changing anyway
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		
+		//Left turns seem to have a positive x briefly, right turns negative
+		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){ 
+
+			if (holdcycles == 0) {
+		        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+		        rx = event.values[0] - gravity[0];
+				if (!mInitialized) {
+					mLastX = rx;
+					mInitialized = true;
+				}
+				else {
+					if (Math.abs(rx) < NOISE) 
+						rx = (float)0.0;
+					else
+						if ((rx > NOISE && rx > mLastX) || (rx < -NOISE && rx < mLastX)) { //filters the end of a turn off, we want the beginning
+							dturn = true;
+							holdcycles = 3;
+							lockedx = rx;
+						}
+					mLastX = rx;
+				}
+			}
+		}
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager2.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		mSensorManager.unregisterListener(this);
+		mSensorManager2.unregisterListener(this);
+	}
     
 }
