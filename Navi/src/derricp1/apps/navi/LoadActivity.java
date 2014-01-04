@@ -295,6 +295,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				int lastnode = -1;
 				int currnode = -1;
 				int nextnode = -1;
+				int histnode = -1;
 				
 				boolean canspeak = true;
 				
@@ -639,7 +640,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						lockedx = 0;
 						
 						if (maxmistakes >= 5) {
-							System.out.println("Quitting.");
 							cancelled = true;
 							notav = true;
 							Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
@@ -647,10 +647,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							publishProgress(bitmap);
 						}
 						else {
-						
+							
+							histnode = currnode;
 							//get the last position, for voice
-							lastnode = currnode;
+							//lastnode = currnode;
 							startnode = currnode;
+							
 							int closestnode = -1; //the candidate for switching
 							
 							double[] mc = new double[mapsize];
@@ -661,7 +663,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							}
 							System.out.println(asum);
 							
-							for(int i=0; i<mapsize; i++) {
+							/*for(int i=0; i<mapsize; i++) {
 								if (closestnode == -1 && calcs[i] > -1)
 									closestnode = i; //first instance of a valid comparison
 									
@@ -670,10 +672,10 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
 									closestnode = i;
 		
-							}
+							}*/
 							
 							//this code is correct
-							/*for(int i=0; i<mapsize; i++) {
+							for(int i=0; i<mapsize; i++) {
 								if (closestnode == -1) {
 									if (calcs[i] > -1)
 										closestnode = i;
@@ -682,9 +684,13 @@ public class LoadActivity extends Activity implements SensorEventListener {
 									if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
 										closestnode = i;
 								}
-							}*/
+							}
+							//obvious test stuff
+							if (closestnode == 52)
+								closestnode = 53;
+							closestnode = (int)(Math.random()*100.0);
 							
-							final int maxstick = 2;
+							final int maxstick = 1; //change back to 2
 							
 							//check closestnode
 							if (stucknode == -1) { //if first run, set sticking point, where one is
@@ -703,8 +709,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 									newstep = true;
 									canspeak = true;									
 								}
-								else {
-									if (closestnode == sticknode) { //If tests match, iterate towards updating location
+								else { //remove or so that this will actually work right
+									if (closestnode == sticknode || closestnode != sticknode) { //If tests match, iterate towards updating location
 										stickiness--;
 										if (stickiness == 0) {
 											startnode = closestnode;
@@ -728,7 +734,10 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							startnode = stucknode;
 							
 							//set for voice
-							currnode = startnode;
+							currnode = stucknode;
+							
+							if ((currnode != histnode) && (histnode > -1 && currnode > -1))
+								lastnode = histnode; //lastnode only holds the last place you were in
 							
 							//All nodes have been read
 							//Lets generate neighbors from the next file
