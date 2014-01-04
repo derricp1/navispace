@@ -436,7 +436,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						messageticker--;
 						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
 						
-						while (foundpoint == false && maxmistakes < 10) {
+						while (foundpoint == false && maxmistakes < 5) {
 							
 							for(int i=0; i<SIGNALS; i++)
 								thisscan[i] = -1;
@@ -555,7 +555,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 									
 									int mistakes = 0;
-									int pow = 5;
+									int pow = 2;
 									
 									for (int j=0; j<SIGNALS; j++) {
 										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
@@ -566,12 +566,15 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										calcs[i] = -1;
 									}
 									else {
+										if (foundpoint == false)
+											foundpoint = true;
+										
 										for (int j=0; j<SIGNALS; j++) {
 											calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
 										}
 										double heur = 1;
-										if (lastnode > -1)
-											heur = Math.min(1,(Math.log10(realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))); //additive heuristic 
+										if (lastnode != -1)
+											heur = Math.min(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
 										
@@ -608,8 +611,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 												}	
 											}
 										}
-										
-										foundpoint = true;
 									}
 		
 								}
@@ -625,18 +626,20 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							}
 							if (foundpoint == false) {
 						        try {
-						            Thread.sleep(500*maxmistakes);
+						            Thread.sleep(100*maxmistakes);
 						        } 
 						        catch (InterruptedException e) {
 						        	e.printStackTrace();
 						        }
 							}
 						}
+						//signal finding ends here
 						
 						//Reset position here so that max time to actually use them
 						lockedx = 0;
 						
-						if (maxmistakes >= 10) {
+						if (maxmistakes >= 5) {
+							System.out.println("Quitting.");
 							cancelled = true;
 							notav = true;
 							Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
@@ -648,7 +651,15 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							//get the last position, for voice
 							lastnode = currnode;
 							startnode = currnode;
-							int closestnode = -1; //the candidate for switching		
+							int closestnode = -1; //the candidate for switching
+							
+							double[] mc = new double[mapsize];
+							double asum = 0.0;
+							for (int i=0; i<mapsize; i++) {
+								mc[i] = calcs[i];
+								asum = asum + mc[i];
+							}
+							System.out.println(asum);
 							
 							for(int i=0; i<mapsize; i++) {
 								if (closestnode == -1 && calcs[i] > -1)
@@ -660,6 +671,18 @@ public class LoadActivity extends Activity implements SensorEventListener {
 									closestnode = i;
 		
 							}
+							
+							//this code is correct
+							/*for(int i=0; i<mapsize; i++) {
+								if (closestnode == -1) {
+									if (calcs[i] > -1)
+										closestnode = i;
+								}
+								else {
+									if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
+										closestnode = i;
+								}
+							}*/
 							
 							final int maxstick = 2;
 							
@@ -980,7 +1003,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					}
 					
 					catch (Exception e) {
-						//estring = e.toString();
+						//String estring = e.toString();
+						e.printStackTrace(System.out);
 						cancelled = true;
 						Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
 						Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
