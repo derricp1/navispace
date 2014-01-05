@@ -262,11 +262,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		//if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
-		//	String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
-		//	Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
-		//	vare = false;
-		//}
+		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
+			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
+			vare = false;
+		}
 		
 		if (vare == false) {
 			finish();
@@ -295,7 +295,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				int lastnode = -1;
 				int currnode = -1;
 				int nextnode = -1;
-				int histnode = -1;
 				
 				boolean canspeak = true;
 				
@@ -508,44 +507,43 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					        
 					        //
 					        //
-					        //if there is a valid turn signal, get neighbors ready
+					        //get neighbors ready
 					        int[][] neighbors = new int[mapsize][4];
 					        for (int p=0; p<mapsize; p++)
 					        	for (int q=0; q<4; q++)
 					        		neighbors[p][q] = -1;
 					        	
-							if (stucknode != -1 && Math.abs(rx) > NOISE) {
-								InputStream is3 = getResources().openRawResource(R.raw.neighbors);
-								InputStreamReader isr3 = new InputStreamReader(is3);
-								BufferedReader br3 = new BufferedReader(isr3);	
+							InputStream is3 = getResources().openRawResource(R.raw.neighbors);
+							InputStreamReader isr3 = new InputStreamReader(is3);
+							BufferedReader br3 = new BufferedReader(isr3);	
 
-								try {
-									String str = br3.readLine(); //Reads the number of nodes - should be the same as before
-									mapsize = Integer.parseInt(str);
-									
-									str = br3.readLine(); //Discards hash
-								} 
-								catch (IOException e) {
-									finish(); //should not reach here
-								}
-
-								try { //Gets every set of neighbors for each node as in the neighbors file
-									for (int ii=0; ii < mapsize; ii++) {
-										int ncount = 0;
-										String stri = br3.readLine(); //Reads in data
-										while (stri.compareTo("#########") != 0) {
-											int j = Integer.parseInt(stri);
-											if (ii != j) { //Double checking neighbor with self case - should not occur on well-made file
-												neighbors[ii][ncount] = j;
-											}
-											stri = br3.readLine();
-										}
-									}
-								} 
-								catch (IOException e) {
-									finish(); //should not reach here either
-								}								
+							try {
+								String str = br3.readLine(); //Reads the number of nodes - should be the same as before
+								mapsize = Integer.parseInt(str);
+								
+								str = br3.readLine(); //Discards hash
+							} 
+							catch (IOException e) {
+								finish(); //should not reach here
 							}
+
+							try { //Gets every set of neighbors for each node as in the neighbors file
+								for (int ii=0; ii < mapsize; ii++) {
+									int ncount = 0;
+									String stri = br3.readLine(); //Reads in data
+									while (stri.compareTo("#########") != 0) {
+										int j = Integer.parseInt(stri);
+										if (ii != j) { //Double checking neighbor with self case - should not occur on well-made file
+											neighbors[ii][ncount] = j;
+										}
+										stri = br3.readLine();
+										ncount++;
+									}
+								}
+							} 
+							catch (IOException e) {
+								finish(); //should not reach here either
+							}								
 							//
 							//
 							//Done checking and doing if needed
@@ -563,54 +561,53 @@ public class LoadActivity extends Activity implements SensorEventListener {
 											mistakes++;
 									}
 									
+									for (int j=0; j<SIGNALS; j++) {
+										calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
+									}
 									if (mistakes > maxmistakes) {
 										calcs[i] = -1;
 									}
 									else {
-										if (foundpoint == false)
-											foundpoint = true;
-										
-										for (int j=0; j<SIGNALS; j++) {
-											calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
-										}
+										foundpoint = true;
 										double heur = 1;
 										if (lastnode != -1)
-											heur = Math.min(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
+											heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
-										
-										//
-										//take the rotation into account
-										//
-										
-										int cn = currnode;
-										int ln = lastnode;
-										
-										float rot = lockedx;
-										if (currnode > -1 && Math.abs(rot) > NOISE) { //not first run (needs to reset)
-											for (int f=0; f<4; f++) {
+									}
+									//
+									//take the rotation into account
+									//
+									
+									int cn = currnode;
+									int ln = lastnode;
+									
+									float rot = lockedx;
+									if (currnode > -1 && Math.abs(rot) > NOISE) { //not first run (needs to reset)
+										for (int f=0; f<4; f++) {
+											
+											if (neighbors[currnode][f] == i && currnode > -1 && lastnode > -1) { //the current node to check in a neighbor of the current location
+												boolean left = false;
+												boolean right = false;
 												
-												if (neighbors[currnode][f] == i && currnode > -1 && lastnode > -1) { //the current node to check in a neighbor of the current location
-													boolean left = false;
-													boolean right = false;
-													
-													if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
-														left = true;
-														dleft = true; //for testing, delete later
-														willturn = true;
-													}
-													if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
-														right = true;
-														dright = true; //for testing, delete later
-														willturn = true;
-													}
-													//the turning may have to be rethought to have a sort of history
-													//scale calcs[i] if turning
-													if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
-														calcs[i] = 0;
-													}
-												}	
-											}
+												if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
+													left = true;
+												}
+												if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
+													right = true;
+												}
+												//the turning may have to be rethought to have a sort of history
+												//scale calcs[i] if turning
+												if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
+													calcs[i] = 0;
+													willturn = true; //actually holds the turn
+													if (lockedx > NOISE && left == true) //printing
+														dleft = true;
+													else
+														dright = true;
+														
+												}
+											}	
 										}
 									}
 		
@@ -648,7 +645,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						}
 						else {
 							
-							histnode = currnode;
 							//get the last position, for voice
 							//lastnode = currnode;
 							startnode = currnode;
@@ -686,11 +682,10 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								}
 							}
 							//obvious test stuff
-							if (closestnode == 52)
-								closestnode = 53;
-							closestnode = (int)(Math.random()*100.0);
+							//if ((currnode == 52 || currnode == 53) && willturn == false)
+							//	closestnode = 53;
 							
-							final int maxstick = 1; //change back to 2
+							final int maxstick = 2; //change back to 2
 							
 							//check closestnode
 							if (stucknode == -1) { //if first run, set sticking point, where one is
@@ -702,24 +697,32 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							}
 							else {
 								if (willturn == true) { //turning via gyro overrides sticking
+									if (closestnode != currnode) {
+										lastnode = currnode;
+									}
 									startnode = closestnode;
 									stucknode = closestnode;
 									sticknode = -1;
 									stickiness = maxstick;
 									newstep = true;
-									canspeak = true;									
+									canspeak = true;
 								}
-								else { //remove or so that this will actually work right
-									if (closestnode == sticknode || closestnode != sticknode) { //If tests match, iterate towards updating location
+								else {
+									if (closestnode == sticknode) { //If tests match, iterate towards updating location
 										stickiness--;
+										
 										if (stickiness == 0) {
+											if (closestnode != currnode) {
+												lastnode = currnode;
+											}
 											startnode = closestnode;
 											stucknode = closestnode;
 											sticknode = -1;
 											stickiness = maxstick;
 											newstep = true;
 											canspeak = true;
-										}								
+										}
+										
 									}
 									else { //reset
 										sticknode = closestnode;
@@ -735,9 +738,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							
 							//set for voice
 							currnode = stucknode;
-							
-							if ((currnode != histnode) && (histnode > -1 && currnode > -1))
-								lastnode = histnode; //lastnode only holds the last place you were in
 							
 							//All nodes have been read
 							//Lets generate neighbors from the next file
@@ -1140,9 +1140,9 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		//Left turns seem to have a positive x briefly, right turns negative
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){ 
 
-			if (holdcycles == 0) {
+			if (holdcycles /*== 0*/ > -999) { //will detect no matter what
 		        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-		        rx = event.values[0] - gravity[0];
+		        rx = -(event.values[0] - gravity[0]);
 				if (!mInitialized) {
 					mLastX = rx;
 					mInitialized = true;
@@ -1151,7 +1151,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					if (Math.abs(rx) < NOISE) 
 						rx = (float)0.0;
 					else
-						if ((rx > NOISE && rx > mLastX) || (rx < -NOISE && rx < mLastX)) { //filters the end of a turn off, we want the beginning
+						if ((rx > NOISE && rx > mLastX) || (rx < -1*NOISE && rx < mLastX)) { //filters the end of a turn off, we want the beginning
 							dturn = true;
 							holdcycles = 3;
 							lockedx = rx;
