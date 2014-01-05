@@ -651,13 +651,13 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							
 							int closestnode = -1; //the candidate for switching
 							
-							double[] mc = new double[mapsize];
+							/*double[] mc = new double[mapsize];
 							double asum = 0.0;
 							for (int i=0; i<mapsize; i++) {
 								mc[i] = calcs[i];
 								asum = asum + mc[i];
 							}
-							System.out.println(asum);
+							System.out.println(asum);*/
 							
 							/*for(int i=0; i<mapsize; i++) {
 								if (closestnode == -1 && calcs[i] > -1)
