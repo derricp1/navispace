@@ -224,13 +224,17 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				}				
 			}
 			 
-			if ((ticker[0] > ticker[1] && ticker[0] > ticker[2]) || (ticker[0] >= ticker[1] && ticker[0] >= ticker[2] && targetfloor == 2)) {
-				bestmatch = 2;
+			if (ticker[targetfloor-2] >= 5) {
+				bestmatch = targetfloor;
 			}
-			if ((ticker[1] > ticker[0] && ticker[1] > ticker[2]) || (ticker[1] >= ticker[0] && ticker[1] >= ticker[2] && targetfloor == 3)) {
-				bestmatch = 3;
+			else {
+				if ((ticker[0] > ticker[1] && ticker[0] > ticker[2]) || (ticker[0] >= ticker[1] && ticker[0] >= ticker[2] && targetfloor == 2)) {
+					bestmatch = 2;
+				}
+				if ((ticker[1] > ticker[0] && ticker[1] > ticker[2]) || (ticker[1] >= ticker[0] && ticker[1] >= ticker[2] && targetfloor == 3)) {
+					bestmatch = 3;
+				}
 			}
-	
 			
 			switch (bestmatch) {
 			
@@ -436,6 +440,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						messageticker--;
 						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
 						
+						int[] numneighbors = new int[mapsize]; //used later, but needs to be kept in scope
+						
 						while (foundpoint == false && maxmistakes < 5) {
 							
 							for(int i=0; i<SIGNALS; i++)
@@ -509,9 +515,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					        //
 					        //get neighbors ready
 					        int[][] neighbors = new int[mapsize][4];
-					        for (int p=0; p<mapsize; p++)
+					        for (int p=0; p<mapsize; p++) {
+					        	numneighbors[p] = 0;
 					        	for (int q=0; q<4; q++)
 					        		neighbors[p][q] = -1;
+					        }
 					        	
 							InputStream is3 = getResources().openRawResource(R.raw.neighbors);
 							InputStreamReader isr3 = new InputStreamReader(is3);
@@ -538,6 +546,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										}
 										stri = br3.readLine();
 										ncount++;
+										numneighbors[ii]++;
 									}
 								}
 							} 
@@ -583,8 +592,37 @@ public class LoadActivity extends Activity implements SensorEventListener {
 									int ln = lastnode;
 									
 									float rot = lockedx;
-									if (currnode > -1 && Math.abs(rot) > NOISE) { //not first run (needs to reset)
-										for (int f=0; f<4; f++) {
+									if (currnode > -1 && Math.abs(rot) > NOISE && lastnode > -1) { //not first run (needs to reset)
+										
+										for (int f=0; f<mapsize; f++) { //if turning, you're probably at an intersection
+											if (numneighbors[f] > 2 && calcs[f] != -1) {
+												calcs[f] = calcs[f] * (1.2-(0.1*numneighbors[f]));
+											}
+										}
+										
+										//No link to neighbor checking (may need to be removed)
+										boolean left = false;
+										boolean right = false;
+										
+										if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
+											left = true;
+										}
+										if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
+											right = true;
+										}
+										
+										//scale calcs[i] if turning - turning now accounts for anything down the line
+										if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
+											calcs[i] = calcs[i]*(1-(1/(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))));
+											willturn = true; //actually holds the turn
+											if (lockedx > NOISE && left == true) //printing
+												dleft = true;
+											else
+												dright = true;
+												
+										}
+										
+										/*for (int f=0; f<4; f++) {
 											
 											if (neighbors[currnode][f] == i && currnode > -1 && lastnode > -1) { //the current node to check in a neighbor of the current location
 												boolean left = false;
@@ -608,7 +646,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 														
 												}
 											}	
-										}
+										}*/
+										
+										
+										
+										
+										
 									}
 		
 								}
@@ -632,9 +675,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							}
 						}
 						//signal finding ends here
-						
-						//Reset position here so that max time to actually use them
-						lockedx = 0;
 						
 						if (maxmistakes >= 5) {
 							cancelled = true;
@@ -681,6 +721,14 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										closestnode = i;
 								}
 							}
+							
+							if ((currnode > -1 && Math.abs(lockedx) > NOISE) && numneighbors[closestnode] > 2) {
+								willturn = true;
+							}
+							
+							//Reset position here so that max time to actually use them
+							lockedx = 0;
+							
 							//obvious test stuff
 							//if ((currnode == 52 || currnode == 53) && willturn == false)
 							//	closestnode = 53;
