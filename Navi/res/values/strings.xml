@@ -3,7 +3,7 @@
 
     <string name="app_name">TCNJ BOOKNAV</string>
     <string name="input_message">Enter a Call Number</string>
-    <string name="button_send">Send</string>
+    <string name="button_send">Begin</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_load">LoadActivity</string>
@@ -17,10 +17,10 @@
     <string name="aboutstring">TCNJ BookNav is a research project developed by Patrick D\'Errico to provide an interface for navigation among the TCNJ Library.</string>
     <string name="specialthanks">Special thanks to:</string>
     <string name="people">(INSERT PEOPLE HERE)</string>
-    <string name="voice_in">Voiced Navigation</string>
-    <string name="voice_out">No Voiced Navigation</string>
-    <string name="word_in">Text Navigation</string>
-    <string name="word_out">No Text Navigation</string>
+    <string name="voice_in">Voice On</string>
+    <string name="voice_out">Voice Off</string>
+    <string name="word_in">Text On</string>
+    <string name="word_out">Text Off</string>
     <string name="title_activity_help">Help</string>
     <string name="hs1">Type a call number and press SEND to get a map to your desired book. The crown is your destination.</string>
     <string name="hs2">The call number refers to the location in the library  of the book.</string>

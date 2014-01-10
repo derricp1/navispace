@@ -21,21 +21,30 @@ public final class R {
         public static final int activity_vertical_margin=0x7f050001;
     }
     public static final class drawable {
-        public static final int call=0x7f020000;
-        public static final int crown=0x7f020001;
-        public static final int f2=0x7f020002;
-        public static final int f3=0x7f020003;
-        public static final int f4=0x7f020004;
-        public static final int floorplan=0x7f020005;
-        public static final int ic_launcher=0x7f020006;
-        public static final int logo=0x7f020007;
+        public static final int about=0x7f020000;
+        public static final int back=0x7f020001;
+        public static final int but=0x7f020002;
+        public static final int call=0x7f020003;
+        public static final int check=0x7f020004;
+        public static final int crown=0x7f020005;
+        public static final int f2=0x7f020006;
+        public static final int f3=0x7f020007;
+        public static final int f4=0x7f020008;
+        public static final int floorplan=0x7f020009;
+        public static final int ic_launcher=0x7f02000a;
+        public static final int logo=0x7f02000b;
+        public static final int notselected=0x7f02000c;
+        public static final int paper=0x7f02000d;
+        public static final int privacy=0x7f02000e;
+        public static final int selected=0x7f02000f;
     }
     public static final class id {
         public static final int ScrollView02=0x7f09000a;
+        public static final int action_about=0x7f09001d;
+        public static final int action_privacy=0x7f09001e;
         public static final int action_settings=0x7f09001c;
-        public static final int button1=0x7f09000f;
-        public static final int button2=0x7f090010;
         public static final int imageView1=0x7f090007;
+        public static final int imageView2=0x7f09000f;
         public static final int input_message=0x7f09000c;
         public static final int row1=0x7f090012;
         public static final int row10=0x7f09001b;
@@ -48,6 +57,7 @@ public final class R {
         public static final int row8=0x7f090019;
         public static final int row9=0x7f09001a;
         public static final int scroller=0x7f09000b;
+        public static final int sendButton=0x7f09000d;
         public static final int tableLayout1=0x7f090011;
         public static final int tableRow1=0x7f090000;
         public static final int tableRow2=0x7f090002;
@@ -58,8 +68,8 @@ public final class R {
         public static final int textView2=0x7f090003;
         public static final int textView3=0x7f090005;
         public static final int textView4=0x7f090008;
-        public static final int toggleButton2=0x7f09000d;
-        public static final int toggleButton3=0x7f09000e;
+        public static final int toggleButton2=0x7f09000e;
+        public static final int toggleButton3=0x7f090010;
     }
     public static final class layout {
         public static final int activity_about=0x7f030000;

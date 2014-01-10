@@ -2,11 +2,14 @@ package derricp1.apps.navi;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -38,6 +41,8 @@ public class Main extends Activity {
 	//May need to change into having 3 arrays, one with node translations to a range, in addition to hi and lo
 	
 	public boolean loaded = false;
+	
+	public View myView;
 	
 	/** Called when the user clicks the Send button */
 	public void sendMessage(View view) {
@@ -249,14 +254,6 @@ public class Main extends Activity {
 	    	Toast.makeText(this, "Please Enter an ISBN", Toast.LENGTH_SHORT).show();
 	    }
 	}
-	
-    //public void zup(View v) {
-    //	ToggleButton but = (ToggleButton) findViewById(R.id.toggleButton1);
-    //	if (but.isChecked())
-    //		zlevel = true;
-    //	else
-    //		zlevel = false;
-    //}
     
     public void wordsup(View v) {
     	if (words == false)
@@ -275,7 +272,9 @@ public class Main extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 		setContentView(R.layout.activity_main);
+	    myView = this.findViewById(android.R.id.content); //gets view (important!) 
 	}
 
 	@Override
@@ -283,6 +282,21 @@ public class Main extends Activity {
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case R.id.action_about:
+	            thanks(myView);
+	            return true;
+	        case R.id.action_privacy:
+	            privacy(myView);
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
 	}
 	
 	public void privacy(View view) {

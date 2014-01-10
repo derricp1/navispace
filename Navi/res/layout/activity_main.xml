@@ -1,136 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
-
- 	<TableLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="0.47" >
-
-        <TableRow
-            android:id="@+id/tableRow1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" >
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical" >
-
-                <TableRow
-                    android:id="@+id/tableRow2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" >
-                </TableRow>
-
-            </LinearLayout>
-
-            <EditText
-                android:id="@+id/input_message"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:hint="@string/input_message" >
-
-                <requestFocus />
-            </EditText>
-        </TableRow>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TableRow
-                android:id="@+id/tableRow3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
-
+        
+	<FrameLayout 
+	    xmlns:android="http://schemas.android.com/apk/res/android"
+		xmlns:tools="http://schemas.android.com/tools"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:orientation="horizontal">
+	    <!-- android:background="@drawable/test"> -->
+	
+	    <ImageView
+	        android:id="@+id/imageView1"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:scaleType="centerCrop"
+	        android:src="@drawable/paper" />
+	    
+		<ScrollView
+		        android:layout_width="wrap_content" 
+		        android:layout_height="wrap_content">
+		        
+		    <RelativeLayout
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content" >
+		        
+	           	<EditText
+	                android:id="@+id/input_message"
+	                android:layout_width="wrap_content"
+	                android:layout_height="100dp"
+	                android:hint="@string/input_message" >
+	            </EditText>
+	            
+       			<Button
+       			    android:id="@+id/sendButton"
+               		android:layout_width="wrap_content"
+               		android:layout_height="wrap_content"
+                  	android:background="@drawable/but"
+                  	android:onClick="sendMessage"
+                  	android:layout_alignParentRight="true"
+                  	android:text="@string/button_send" />
+       			
                 <ToggleButton
                     android:id="@+id/toggleButton2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+               		android:layout_width="wrap_content"
+               		android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
                     android:onClick="voiceup"
+                    android:layout_below="@id/input_message"
+                    android:background="@drawable/check"
                     android:textOff="@string/voice_out"
                     android:textOn="@string/voice_in" />
-
-                <ToggleButton
-                    android:id="@+id/toggleButton3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:onClick="wordsup"
-                    android:textOff="@string/word_out"
-                    android:textOn="@string/word_in" />                
                 
-            </TableRow>
+                <ImageView
+                    android:id="@+id/imageView2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="10dp"
+                    android:layout_below="@id/sendButton"
+                  	android:layout_toRightOf="@+id/toggleButton2"
+                    android:src="@drawable/logo" />
+                
+       			<ToggleButton
+       			    android:id="@+id/toggleButton3"
+               		android:layout_width="wrap_content"
+               		android:layout_height="wrap_content"
+       			    android:layout_margin="10dp"
+       			    android:layout_below="@id/toggleButton2"
+       			    android:onClick="wordsup"
+       			    android:background="@drawable/check"
+       			    android:textOff="@string/word_out"
+       			    android:textOn="@string/word_in" />
 
-        </LinearLayout>
-
-       	<LinearLayout
-       	    android:layout_width="match_parent"
-       	    android:layout_height="wrap_content"
-       	    android:layout_gravity="bottom"
-       	    android:gravity="left|right"
-       	    android:orientation="vertical" >
-
-       		<TableRow
-       		    android:id="@+id/tableRow4"
-       		    android:layout_width="match_parent"
-       		    android:layout_height="wrap_content" >
-
-       		</TableRow>
-
-       		<ImageView
-       		    android:id="@+id/imageView1"
-       		    android:layout_width="wrap_content"
-       		    android:layout_height="wrap_content"
-       		    android:src="@drawable/logo" />
-
-       		<TableRow
-       		    android:id="@+id/tableRow5"
-       		    android:layout_width="match_parent"
-       		    android:layout_height="wrap_content" >
-
-       		    <Button
-       		        android:id="@+id/button1"
-       		        android:layout_width="wrap_content"
-       		        android:layout_height="wrap_content"
-       		        android:onClick="thanks"
-       		        android:text="@string/thanks" />
-
-       		    <Button
-       		        android:layout_width="wrap_content"
-       		        android:layout_height="match_parent"
-       		        android:onClick="privacy"
-       		        android:text="@string/priv" />
-       		    
-       		   	<Button
-       		        android:layout_width="wrap_content"
-       		        android:layout_height="match_parent"
-       		        android:onClick="help"
-       		        android:text="@string/help" />
-
-
-       		</TableRow>
-
-        </LinearLayout>
-
-       	<Button
-       	    android:id="@+id/button2"
-       	    android:layout_width="wrap_content"
-       	    android:layout_height="wrap_content"
-       	    android:onClick="test"
-       	    android:text="TEST" />
- 
-    </TableLayout>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="100dp"
-        android:onClick="sendMessage"
-        android:text="@string/button_send" />
-
-</LinearLayout>
+       			<Button
+       			    android:layout_width="wrap_content"
+       			    android:layout_height="wrap_content"
+       			    android:layout_below="@+id/imageView2"
+       			    android:layout_alignParentRight="true"
+       			    android:onClick="help"
+       			    android:layout_margin="10dp"
+       			    android:background="@drawable/but"
+       			    android:text="@string/help" />
+		        		        
+		    </RelativeLayout>
+	    
+		</ScrollView>			
+	
+	</FrameLayout>

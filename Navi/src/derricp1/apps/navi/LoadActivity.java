@@ -93,6 +93,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
     @SuppressLint("NewApi")
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         super.onCreate(savedInstanceState);
         
         //More sensor stuff
@@ -266,11 +267,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+		/*if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
 			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
 			vare = false;
-		}
+		}*/
 		
 		if (vare == false) {
 			finish();
@@ -1145,16 +1146,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		math.execute(v);
         
     }   
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-        case android.R.id.home:
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
     
     public float scale(float inloc, int inmax, int indim) {
     	
@@ -1223,5 +1214,22 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		mSensorManager.unregisterListener(this);
 		mSensorManager2.unregisterListener(this);
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		//getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case android.R.id.home:
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
     
 }
