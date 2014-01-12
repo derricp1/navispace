@@ -34,6 +34,8 @@ public class TestActivity extends Activity implements SensorEventListener {
 	private SensorManager mSensorManager2;
 	private Sensor mGyroscope;
 	
+	private float rot;
+	
 	private float mLastX, mLastY, mLastZ;
 	private float gravity[];
 
@@ -46,7 +48,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		mSensorManager2 = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		mGyroscope = mSensorManager2.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+		mGyroscope = mSensorManager2.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 		
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
 		mSensorManager2.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
@@ -356,7 +358,22 @@ public class TestActivity extends Activity implements SensorEventListener {
 				//row.setText(Float.toString(deltaZ));
 			}
 		}
-		if (event.sensor.getType()==Sensor.TYPE_GYROSCOPE){
+		if (event.sensor.getType()==Sensor.TYPE_ROTATION_VECTOR) {
+			TextView row = (TextView) findViewById(R.id.row4); 
+			float x = event.values[0];
+			float y = event.values[1];
+			float z = event.values[2];
+			if (Math.abs(x) < 0.1) x = (float)0.0;
+			if (Math.abs(y) < 0.1) y = (float)0.0;
+			if (Math.abs(z) < 0.1) z = (float)0.0;
+			
+			row.setText(Float.toString(x));
+			row = (TextView) findViewById(R.id.row5); 
+			row.setText(Float.toString(y));
+			row = (TextView) findViewById(R.id.row6); 
+			row.setText(Float.toString(z));
+		}
+		/* if (event.sensor.getType()==Sensor.TYPE_GYROSCOPE){
 			float x = event.values[0];
 			float y = event.values[1];
 			float z = event.values[2];
@@ -395,7 +412,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 				//row = (TextView) findViewById(R.id.row6); 
 				//row.setText(Float.toString(deltaZ));
 			}
-		}
+		} */
 	}
 	
 	@Override

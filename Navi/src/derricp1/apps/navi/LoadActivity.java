@@ -13,6 +13,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
@@ -41,6 +42,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	
 	String estring = "";
 	int enumb = 0;
+	public int target = 0;
 	
 	//(0,0) is in top left corner
 	
@@ -65,9 +67,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
     private boolean cancelled = false;
     private boolean butcan = false;
     private boolean notav = false;
-    
-    
-    
+
     //accelerometer stuff
     public int holdcycles = 0;
 	public float NOISE = (float) 0.3;
@@ -77,8 +77,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
-	private SensorManager mSensorManager2;
-	private Sensor mGyroscope;
 	
 	private float mLastX, mLastY, mLastZ;
 	private float gravity[];
@@ -89,30 +87,75 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	private boolean dright = false;
 	private boolean dturn = false;
 	private boolean willturn = false;
+	
+	//all in below:
+	//may need to move to async
+	private int lastnode = -1;
+	private int currnode = -1;
+	private int nextnode = -1;
+	
+	private boolean reset = false;
+	private int[] resetarr = new int[4];
+	
+	//private int oldo = 0;
+	
+	int[] currsig = new int[SIGNALS];
+	int tests = 333;
+	
+	int stickiness = 2;
+	int sticknode = -1; //node that's trying to be moved to
+	int stucknode = -1; //node we are "stuck" at
+	
+    Bitmap bitmap, newbitmap;
+    //Determine scaling factor
+    int imageViewHeight;
+    float factor;
+    
+    int nh;
+    int nw;
 
+    //Create another bitmap to draw on
+    Bitmap tempBitmap;
+    Canvas tempCanvas;
+    
+    //Turn the canvas back to a new bitmap
+    Bitmap linemap;	
+    
+    //detect direction of turn
+    public int curror;
+    public Configuration config;
+	public String LASTORIENT;
+	public String LASTREADING;
+	public boolean orleft;
+	public boolean orright;
+	public int rotation = 0;
+	
+    //----------------------------------------------------------
+    
     @SuppressLint("NewApi")
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
-        super.onCreate(savedInstanceState);
+    	super.onCreate(savedInstanceState);  	
         
         //More sensor stuff
 		mInitialized = false;
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-		mSensorManager2 = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		mGyroscope = mSensorManager2.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 		
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		mSensorManager2.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
 		
 		gravity = new float[3];
 		for (int i=0; i<3; i++)
 			gravity[i] = (float) 9.8;
 		//Return to normal
         
+		//check out orientation
+		Configuration config = getResources().getConfiguration();
+		curror = config.orientation; //1 for port, 2 for landscape
+		rotation = getWindowManager().getDefaultDisplay().getRotation();
 
-        setContentView(R.layout.activity_load);      
+        setContentView(R.layout.activity_load);    
+        
         this.imageView = (ImageView)findViewById(R.id.scroller); //Read in the view that lets us scroll the map
 
         //sound
@@ -131,7 +174,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 
         // Get the message from the intent
         Intent intent = getIntent();
-        int target = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
+        target = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
         final boolean ztog = intent.getBooleanExtra(Main.ZOOM_LEVEL, false);
         final boolean voice = intent.getBooleanExtra(Main.VOICES, false);
         final boolean words = intent.getBooleanExtra(Main.WORDS, false);
@@ -297,18 +340,15 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				
 				WifiManager myWifiManager2 = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 				boolean wasEnabled2 = myWifiManager2.isWifiEnabled();
-				int lastnode = -1;
-				int currnode = -1;
-				int nextnode = -1;
 				
 				boolean canspeak = true;
 				
-				int[] currsig = new int[SIGNALS];
-				int tests = 333;
+				currsig = new int[SIGNALS];
+				tests = 333;
 				
-				int stickiness = 2;
-				int sticknode = -1; //node that's trying to be moved to
-				int stucknode = -1; //node we are "stuck" at
+				stickiness = 2;
+				sticknode = -1; //node that's trying to be moved to
+				stucknode = -1; //node we are "stuck" at
 				
 				//obstacles
 				int obs = 5;
@@ -427,6 +467,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 
 					try {
 						
+						rotation = getWindowManager().getDefaultDisplay().getRotation();
+						
 						//only matters for messages, and will be deleted
 						dleft = false;
 						dright = false;
@@ -439,7 +481,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						int maxmistakes = 1;
 						int trials = 0;
 						messageticker--;
-						setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR); //lock orientation
 						
 						int[] numneighbors = new int[mapsize]; //used later, but needs to be kept in scope
 						
@@ -589,9 +630,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 									//take the rotation into account
 									//
 									
-									int cn = currnode;
-									int ln = lastnode;
-									
 									float rot = lockedx;
 									if (currnode > -1 && Math.abs(rot) > NOISE && lastnode > -1) { //not first run (needs to reset)
 										
@@ -601,58 +639,46 @@ public class LoadActivity extends Activity implements SensorEventListener {
 											}
 										}
 										
-										//No link to neighbor checking (may need to be removed)
-										boolean left = false;
-										boolean right = false;
-										
-										if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
-											left = true;
-										}
-										if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
-											right = true;
+										boolean neigh = false;
+										//check to see if this node is a neighbor
+										for (int qq=0; qq < 4; qq++) {
+											if (neighbors[currnode][qq] == i)
+												neigh = true;
 										}
 										
-										//scale calcs[i] if turning - turning now accounts for anything down the line
-										if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
-											calcs[i] = calcs[i]*(1-(1/(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))));
-											willturn = true; //actually holds the turn
-											if (lockedx > NOISE && left == true) //printing
-												dleft = true;
-											else
-												dright = true;
-												
-										}
-										
-										/*for (int f=0; f<4; f++) {
+										if (neigh == true) {
+											//No link to neighbor checking (may need to be removed)
+											boolean left = false;
+											boolean right = false;
 											
-											if (neighbors[currnode][f] == i && currnode > -1 && lastnode > -1) { //the current node to check in a neighbor of the current location
-												boolean left = false;
-												boolean right = false;
-												
-												if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
-													left = true;
-												}
-												if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
-													right = true;
-												}
-												//the turning may have to be rethought to have a sort of history
-												//scale calcs[i] if turning
-												if ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) {
-													calcs[i] = 0;
-													willturn = true; //actually holds the turn
-													if (lockedx > NOISE && left == true) //printing
-														dleft = true;
-													else
-														dright = true;
-														
-												}
-											}	
-										}*/
-										
-										
-										
-										
-										
+											if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
+												left = true;
+											}
+											if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
+												right = true;
+											}
+											
+											boolean correct = false;
+											if (curror == 1 && ((lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true))) {
+												correct = true;
+											}
+											//1, screen is counterclockwise, - is left, 3, screen is clockwise, + is left
+											if (curror == 2 && ( (rotation == 3 &&(lockedx > NOISE && left == true) || (lockedx < -NOISE && right == true)) || (rotation == 1 &&(lockedx < NOISE && left == true) || (lockedx > -NOISE && right == true)) )) {
+												correct = true;
+											}
+											
+											//scale calcs[i] if turning - turning now accounts for anything down the line
+											if (correct == true) {
+												//calcs[i] = calcs[i]*(1-(1/(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))));
+												calcs[i] = 0;
+												willturn = true; //actually holds the turn
+												if (lockedx > NOISE && left == true) //printing
+													dleft = true;
+												else
+													dright = true;
+													
+											}
+										}
 									}
 		
 								}
@@ -692,25 +718,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							
 							int closestnode = -1; //the candidate for switching
 							
-							/*double[] mc = new double[mapsize];
-							double asum = 0.0;
-							for (int i=0; i<mapsize; i++) {
-								mc[i] = calcs[i];
-								asum = asum + mc[i];
-							}
-							System.out.println(asum);*/
-							
-							/*for(int i=0; i<mapsize; i++) {
-								if (closestnode == -1 && calcs[i] > -1)
-									closestnode = i; //first instance of a valid comparison
-									
-							}
-							for(int i=0; i<mapsize; i++) {
-								if (calcs[i] < calcs[closestnode] && calcs[i] > -1) //Pick nearest neighbor
-									closestnode = i;
-		
-							}*/
-							
 							//this code is correct
 							for(int i=0; i<mapsize; i++) {
 								if (closestnode == -1) {
@@ -727,12 +734,21 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								willturn = true;
 							}
 							
+							//reset on new state
+							if (firstrun == true && reset == true) {
+					    		target = resetarr[0];
+					    		currnode = resetarr[1];
+					    		lastnode = resetarr[2];
+					    		nextnode = resetarr[3];
+							}
+							
+							
 							//Reset position here so that max time to actually use them
 							lockedx = 0;
 							
 							//obvious test stuff
-							//if ((currnode == 52 || currnode == 53) && willturn == false)
-							//	closestnode = 53;
+							if ((currnode == 52 || currnode == 53) && willturn == false)
+								closestnode = 53;	
 							
 							final int maxstick = 2; //change back to 2
 							
@@ -875,29 +891,33 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						        		drawable = getResources().getDrawable(R.drawable.f4);
 						        		break; //this will be for 4, the only other choice
 						        }
-						        
+
 						        double mult = 1;
 						        //we could toggle but there's the leak
 						        
-						        Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+						        bitmap = ((BitmapDrawable)drawable).getBitmap();
 						
 						        //Determine scaling factor
-						        int imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
-						        float factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
+						        imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
+						        factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
 						        
-						        int nh = (int)(bitmap.getHeight()*factor*mult);
-						        int nw = (int)(bitmap.getWidth()*factor*mult);
+						        nh = (int)(bitmap.getHeight()*factor*mult);
+						        nw = (int)(bitmap.getWidth()*factor*mult);
 						        
 						        // Create a new bitmap with the scaling factor
 						        //zoom the drawable if zoom option is on
-						        Bitmap newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
+						        newbitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
+						        
+						        if (newbitmap.getHeight() == -1 || newbitmap.getWidth() == -1) {
+						        	newbitmap = bitmap;
+						        }
 						
 						        //Create another bitmap to draw on
-						        Bitmap tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
-						        Canvas tempCanvas = new Canvas(tempBitmap);
+						        tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        tempCanvas = new Canvas(tempBitmap);
 						        
 						        //Turn the canvas back to a new bitmap
-						        Bitmap linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
 						        tempCanvas.setBitmap(linemap);
 						        //Works as we go
 						        
@@ -1180,8 +1200,16 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){ 
 
 			if (holdcycles /*== 0*/ > -999) { //will detect no matter what
-		        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-		        rx = -(event.values[0] - gravity[0]);
+				
+				if (curror == 1) { //x axis of portrait
+		        	gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
+		        	rx = -(event.values[0] - gravity[0]);
+				}
+				if (curror == 2) { //y axis if landscape
+		        	gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
+		        	rx = -(event.values[1] - gravity[1]);
+				}				
+		        
 				if (!mInitialized) {
 					mLastX = rx;
 					mInitialized = true;
@@ -1205,14 +1233,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	protected void onResume() {
 		super.onResume();
 		mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-		mSensorManager2.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_NORMAL);
 	}
 	
 	@Override
 	protected void onPause() {
 		super.onPause();
 		mSensorManager.unregisterListener(this);
-		mSensorManager2.unregisterListener(this);
 	}
 	
 	@Override
@@ -1232,4 +1258,15 @@ public class LoadActivity extends Activity implements SensorEventListener {
         return super.onOptionsItemSelected(item);
     }
     
+    /*public void onSaveInstanceState(Bundle savedInstanceState) {
+        // Save the user's current game state
+        savedInstanceState.putInt(LASTORIENT, curror);
+        savedInstanceState.putFloat(LASTREADING, lockedx);
+        
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }*/
+    
+
 }
+

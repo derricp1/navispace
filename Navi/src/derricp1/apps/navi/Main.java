@@ -3,6 +3,7 @@ package derricp1.apps.navi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -272,7 +273,8 @@ public class Main extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setContentView(R.layout.activity_main);
 	    myView = this.findViewById(android.R.id.content); //gets view (important!) 
 	}
@@ -325,6 +327,6 @@ public class Main extends Activity {
     public void onBackPressed() {
         //don't go back, it'll mess everything up due to asyncs
     }
-	
+
 }
 

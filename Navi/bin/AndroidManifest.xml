@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="derricp1.apps.navi.LoadActivity"
+            android:name="derricp1.apps.navi.LoadActivity" android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/app_name" >
         </activity>
         <activity
