@@ -78,7 +78,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	private SensorManager mSensorManager;
 	private Sensor mAccelerometer;
 	
-	private float mLastX, mLastY, mLastZ;
+	private float mLastX = 0, mLastY = 0, mLastZ = 0;
 	private float gravity[];
 	private float rx = 0, ry = 0, rz = 0;
 	private float lockedx = 0;
@@ -652,10 +652,10 @@ public class LoadActivity extends Activity implements SensorEventListener {
 											boolean right = false;
 											
 											if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i])) {
-												left = true;
+												right = true;
 											}
 											if ((nodex[currnode] == nodex[lastnode] && nodey[currnode] <= nodey[lastnode] && nodex[currnode] < nodex[i]) || (nodex[currnode] < nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] > nodey[i]) || (nodex[currnode] == nodex[lastnode] && nodey[currnode] > nodey[lastnode] && nodex[currnode] > nodex[i]) || (nodex[currnode] > nodex[lastnode] && nodey[currnode] == nodey[lastnode] && nodey[currnode] < nodey[i])) {
-												right = true;
+												left = true;
 											}
 											
 											boolean correct = false;
