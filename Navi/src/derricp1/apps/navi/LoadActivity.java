@@ -1150,12 +1150,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				if (estring != "")
 					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
 				
-				if (dleft == true)
-					Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
-				if (dright == true)
-					Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
-				if (dturn == true)
-					Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
+				//if (dleft == true)
+				//	Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
+				//if (dright == true)
+				//	Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
+				//if (dturn == true)
+				//	Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
 					
 			}
 			
