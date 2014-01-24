@@ -310,11 +310,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		/*if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
 			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
 			vare = false;
-		}*/
+		}
 		
 		if (vare == false) {
 			finish();
@@ -670,7 +670,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 											//scale calcs[i] if turning - turning now accounts for anything down the line
 											if (correct == true) {
 												//calcs[i] = calcs[i]*(1-(1/(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i])))));
-												calcs[i] = 0;
+												calcs[i] = calcs[i] * 0.1;
 												willturn = true; //actually holds the turn
 												if (lockedx > NOISE && left == true) //printing
 													dleft = true;
@@ -747,8 +747,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							lockedx = 0;
 							
 							//obvious test stuff
-							if ((currnode == 52 || currnode == 53) && willturn == false)
-								closestnode = 53;	
+							//if ((currnode == 52 || currnode == 53) && willturn == false)
+							//	closestnode = 53;	
 							
 							final int maxstick = 2; //change back to 2
 							
