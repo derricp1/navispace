@@ -310,11 +310,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
-			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
-			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
-			vare = false;
-		}
+//		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+//			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
+//			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
+//			vare = false;
+//		}
 		
 		if (vare == false) {
 			finish();
@@ -747,8 +747,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							lockedx = 0;
 							
 							//obvious test stuff
-							//if ((currnode == 52 || currnode == 53) && willturn == false)
-							//	closestnode = 53;	
+							if ((currnode == 52 || currnode == 53) && willturn == false)
+								closestnode = 53;	
 							
 							final int maxstick = 2; //change back to 2
 							
@@ -895,7 +895,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						        double mult = 1;
 						        //we could toggle but there's the leak
 						        
-						        bitmap = ((BitmapDrawable)drawable).getBitmap();
+						        /* bitmap = ((BitmapDrawable)drawable).getBitmap();
 						
 						        //Determine scaling factor
 						        imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
@@ -945,7 +945,59 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						        
 						        //Draw the image bitmap into the canvas
 						        
-						        tempCanvas.drawBitmap(newbitmap, 0, 0, null);
+						        tempCanvas.drawBitmap(newbitmap, 0, 0, null); */
+						        
+						       
+						        
+						        bitmap = ((BitmapDrawable)drawable).getBitmap();
+								
+						        //Determine scaling factor
+						        imageViewHeight = getWindowManager().getDefaultDisplay().getHeight();
+						        factor = ( (float) imageViewHeight / (float) bitmap.getHeight() );
+						        
+						        nh = (int)(bitmap.getHeight()*factor*mult);
+						        nw = (int)(bitmap.getWidth()*factor*mult);
+						        
+						        // Create a new bitmap with the scaling factor
+						        //zoom the drawable if zoom option is on
+						        bitmap = Bitmap.createScaledBitmap(bitmap, nw, nh, false);
+						
+						        //Create another bitmap to draw on
+						        tempBitmap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        tempCanvas = new Canvas(tempBitmap);
+						        
+						        //Turn the canvas back to a new bitmap
+						        linemap = Bitmap.createBitmap(nw, nh, Bitmap.Config.ARGB_4444);
+						        tempCanvas.setBitmap(linemap);
+						        //Works as we go
+						        
+						        myPaint.setColor(Color.BLACK);
+						        BLUE.setColor(Color.BLUE);
+						        GREEN.setColor(Color.GREEN);
+						        
+						        myPaint.setStrokeWidth((float) (10*mult)); //make the lines bigger, will only affect the directional lines
+						        
+						        //do again for crown
+						        
+						        Drawable drawable2 = getResources().getDrawable(R.drawable.crown);
+						        Bitmap imgmap = ((BitmapDrawable)drawable2).getBitmap();
+						        int imgh = (int)(imgmap.getHeight()*factor*mult);
+						        int imgw = (int)(imgmap.getWidth()*factor*mult);
+						        
+						        float firstx = scale((float)nodex[pathstarts[linecount-1]], FLOORWIDTH, nw);
+						        
+						        if (firstrun == true && firstx > getWindowManager().getDefaultDisplay().getWidth())
+						        	reminder = true;
+						        else
+						        	reminder = false;
+						        	
+						        firstrun = false;
+						        
+						        //Draw the image bitmap into the canvas
+						        
+						        tempCanvas.drawBitmap(bitmap, 0, 0, null);
+						        
+
 						        
 						        //Draw Lines
 						        for (int i=0; i<linecount; i++) {
@@ -1150,12 +1202,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				if (estring != "")
 					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
 				
-				//if (dleft == true)
-				//	Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
-				//if (dright == true)
-				//	Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
-				//if (dturn == true)
-				//	Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
+				if (dleft == true)
+					Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
+				if (dright == true)
+					Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
+				if (dturn == true)
+					Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
 					
 			}
 			
@@ -1257,16 +1309,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
         }
         return super.onOptionsItemSelected(item);
     }
-    
-    /*public void onSaveInstanceState(Bundle savedInstanceState) {
-        // Save the user's current game state
-        savedInstanceState.putInt(LASTORIENT, curror);
-        savedInstanceState.putFloat(LASTREADING, lockedx);
-        
-        // Always call the superclass so it can save the view hierarchy state
-        super.onSaveInstanceState(savedInstanceState);
-    }*/
-    
 
 }
 
