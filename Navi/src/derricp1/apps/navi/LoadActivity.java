@@ -310,7 +310,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		final int thisscan[] = new int[SIGNALS];
 		
 		//part of here too
-		if (vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0) || (bestmatch != targetfloor)) {
+		if ((vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0)) || (bestmatch != targetfloor)) {
 			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
 			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
 			vare = false;
@@ -605,7 +605,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 									
 									int mistakes = 0;
-									int pow = 2;
+									int pow = 3; //upping because of feedback
 									
 									for (int j=0; j<SIGNALS; j++) {
 										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
@@ -622,7 +622,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										foundpoint = true;
 										double heur = 1;
 										if (lastnode != -1)
-											heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
+											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),3));
+											//heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
 									}
