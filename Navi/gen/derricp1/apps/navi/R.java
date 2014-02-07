@@ -39,9 +39,10 @@ public final class R {
         public static final int ic_launcher=0x7f02000f;
         public static final int logo=0x7f020010;
         public static final int notselected=0x7f020011;
-        public static final int paper=0x7f020012;
-        public static final int privacy=0x7f020013;
-        public static final int selected=0x7f020014;
+        public static final int oldcrown=0x7f020012;
+        public static final int paper=0x7f020013;
+        public static final int privacy=0x7f020014;
+        public static final int selected=0x7f020015;
     }
     public static final class id {
         public static final int ScrollView02=0x7f09000a;

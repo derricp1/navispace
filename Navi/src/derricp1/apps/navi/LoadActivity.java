@@ -605,7 +605,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 									
 									int mistakes = 0;
-									int pow = 3; //upping because of feedback
+									int pow = 2;
 									
 									for (int j=0; j<SIGNALS; j++) {
 										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
@@ -622,7 +622,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										foundpoint = true;
 										double heur = 1;
 										if (lastnode != -1)
-											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),3));
+											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),4)); //upped due to feedback
 											//heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
@@ -1203,13 +1203,14 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				if (estring != "")
 					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
 				
+				/*
 				if (dleft == true)
 					Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
 				if (dright == true)
 					Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
 				if (dturn == true)
 					Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
-					
+				*/
 			}
 			
 			
