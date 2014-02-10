@@ -478,7 +478,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							holdcycles--;
 						
 						boolean foundpoint = false;
-						int maxmistakes = 1;
+						int maxmistakes = 2; //may change this back
 						int trials = 0;
 						messageticker--;
 						
