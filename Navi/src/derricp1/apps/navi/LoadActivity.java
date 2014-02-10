@@ -612,9 +612,15 @@ public class LoadActivity extends Activity implements SensorEventListener {
 											mistakes++;
 									}
 									
-									for (int j=0; j<SIGNALS; j++) {
+									/*for (int j=0; j<SIGNALS; j++) {
 										calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
-									}
+									}*/
+									for (int j=0; j<SIGNALS; j++) { //experimental
+										if (isthere[j][i] == isus[j] && Math.abs(currsig[j]-nodess[j][i]) <= 50)
+											calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
+										else
+											calcs[i] = calcs[i] + Math.pow(50,pow);
+									}								
 									if (mistakes > maxmistakes) {
 										calcs[i] = -1;
 									}
@@ -622,7 +628,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										foundpoint = true;
 										double heur = 1;
 										if (lastnode != -1)
-											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),4)); //upped due to feedback
+											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),5)); //upped due to feedback
 											//heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
@@ -751,7 +757,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							//if ((currnode == 52 || currnode == 53) && willturn == false)
 							//	closestnode = 53;	
 							
-							final int maxstick = 2; //change back to 2
+							final int maxstick = 1; //change back to 2, experimental
 							
 							//check closestnode
 							if (stucknode == -1) { //if first run, set sticking point, where one is

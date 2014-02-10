@@ -73,7 +73,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 		
 		//Print out signal strengths at points
 		
-/*		t_ids[0] = "d8:c7:c8:6e:81:a9";
+		t_ids[0] = "d8:c7:c8:6e:81:a9";
 		t_ids[1] = "d8:c7:c8:ab:2e:e8";
 		t_ids[2] = "d8:c7:c8:6e:81:a8";
 		t_ids[3] = "d8:c7:c8:ab:21:50";
@@ -84,7 +84,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 		t_ids[8] = "d8:c7:c8:ab:2e:e0";
 		t_ids[9] = "d8:c7:c8:ab:21:58";	
 		
-		t_ids[0] = "d8:c7:c8:ab:29:82";
+		/*t_ids[0] = "d8:c7:c8:ab:29:82";
 		t_ids[1] = "d8:c7:c8:ab:29:81";
 		t_ids[2] = "d8:c7:c8:ab:29:f1";
 		t_ids[3] = "d8:c7:c8:ab:2c:18";
@@ -103,7 +103,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 		t_ids[5] = "d8:c7:c8:ab:29:e8";
 		t_ids[6] = "d8:c7:c8:ab:2a:00";
 		t_ids[7] = "d8:c7:c8:ab:2c:2a";
-		t_ids[8] = "d8:c7:c8:ab:2a:08";
+		t_ids[8] = "d8:c7:c8:ab:2a:08";*/
 		t_ids[9] = "d8:c7:c8:ab:2c:50";	
 		
 		boolean tester = true;
@@ -170,7 +170,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 		row = (TextView) findViewById(R.id.row9); 
 		row.setText(Integer.toString(t_scans[8]));
 		row = (TextView) findViewById(R.id.row10); 
-		row.setText(Integer.toString(t_scans[9]));*/
+		row.setText(Integer.toString(t_scans[9]));
 		
 		//Make sure reading in works
 		
@@ -309,7 +309,7 @@ public class TestActivity extends Activity implements SensorEventListener {
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		
+		/*
 		//Left turns seem to have a positive x briefly, right turns negative
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER){ 
 			
@@ -412,7 +412,8 @@ public class TestActivity extends Activity implements SensorEventListener {
 				//row = (TextView) findViewById(R.id.row6); 
 				//row.setText(Float.toString(deltaZ));
 			}
-		} */
+		}
+		*/
 	}
 	
 	@Override
