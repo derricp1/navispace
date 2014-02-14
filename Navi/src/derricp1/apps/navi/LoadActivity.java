@@ -605,22 +605,23 @@ public class LoadActivity extends Activity implements SensorEventListener {
 								if (i >= fstarts[floor-2] && i <= fends[floor-2]) {
 									
 									int mistakes = 0;
-									int pow = 2;
+									int pow = 2; //never changed
 									
 									for (int j=0; j<SIGNALS; j++) {
 										if (isthere[j][i] != isus[j] || Math.abs(currsig[j]-nodess[j][i]) > 50)
 											mistakes++;
 									}
 									
-									/*for (int j=0; j<SIGNALS; j++) {
+									for (int j=0; j<SIGNALS; j++) {
 										calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
-									}*/
-									for (int j=0; j<SIGNALS; j++) { //experimental
+									}
+									//new version, above is old
+									/*for (int j=0; j<SIGNALS; j++) { //experimental
 										if (isthere[j][i] == isus[j] && Math.abs(currsig[j]-nodess[j][i]) <= 50)
 											calcs[i] = calcs[i] + Math.pow(Math.abs(currsig[j]-nodess[j][i]),pow);
 										else
 											calcs[i] = calcs[i] + Math.pow(50,pow);
-									}								
+									}*/								
 									if (mistakes > maxmistakes) {
 										calcs[i] = -1;
 									}
@@ -628,8 +629,9 @@ public class LoadActivity extends Activity implements SensorEventListener {
 										foundpoint = true;
 										double heur = 1;
 										if (lastnode != -1)
-											heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),5)); //upped due to feedback
-											//heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
+											//heur = Math.max(1,Math.pow(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))),5)); //upped due to feedback
+											heur = Math.max(1,(Math.log10(Math.max(1,realDistance(nodex[lastnode], nodey[lastnode], nodex[i], nodey[i]))))); //additive heuristic 
+											//old version, backed up to this point.
 										
 										calcs[i] = heur * Math.sqrt(calcs[i]);
 									}
