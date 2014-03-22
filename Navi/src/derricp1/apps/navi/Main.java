@@ -53,11 +53,14 @@ public class Main extends Activity {
 	    String isbn = (editText.getText().toString()).toUpperCase(Locale.ENGLISH);
 	    
 	    //remove periods
-	    for (int q=0; q<isbn.length(); q++) {
-	    	while (isbn.charAt(q) == '.' || isbn.charAt(q) == ' ') {
+	    while (isbn.contains((CharSequence) ".") == true) {
+	    	int q = isbn.indexOf(".");
+	    	if (q != isbn.length()-1)
 	    		isbn = isbn.substring(0, q-1) + isbn.substring(q+1, isbn.length()-1); //chop period
-	    	}	
+	    	else
+	    		isbn = isbn.substring(0, q-1);
 	    }
+	    
 	    //also do the third level split 
 	    
 	    String isbnchars = ""; //splitting of the isbn
@@ -273,7 +276,7 @@ public class Main extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
 		//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 		setContentView(R.layout.activity_main);
 	    myView = this.findViewById(android.R.id.content); //gets view (important!) 

@@ -40,6 +40,8 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	
 	Context now = this;
 	
+	boolean debug = false;
+	
 	String estring = "";
 	int enumb = 0;
 	public int target = 0;
@@ -309,11 +311,12 @@ public class LoadActivity extends Activity implements SensorEventListener {
 		
 		final int thisscan[] = new int[SIGNALS];
 		
-		//part of here too
-		if ((vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0)) || (bestmatch != targetfloor)) {
-			String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
-			Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
-			vare = false;
+		if (debug == false) {
+			if ((vare == true && (ticker[0] == 0 && ticker[1] == 0 && ticker[2] == 0)) || (bestmatch != targetfloor)) {
+				String failstring = "Book at floor " + targetfloor + ".  Please retry there.";
+				Toast.makeText(this, failstring, Toast.LENGTH_LONG).show();
+				vare = false;
+			}
 		}
 		
 		if (vare == false) {
@@ -755,9 +758,11 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							//Reset position here so that max time to actually use them
 							lockedx = 0;
 							
-							//obvious test stuff
-							//if ((currnode == 52 || currnode == 53) && willturn == false)
-							//	closestnode = 53;	
+							if (debug == true) {
+								//obvious test stuff
+								if ((currnode == 52 || currnode == 53) && willturn == false)
+									closestnode = 53;
+							}
 							
 							final int maxstick = 1; //change back to 2, experimental
 							
@@ -1211,14 +1216,14 @@ public class LoadActivity extends Activity implements SensorEventListener {
 				if (estring != "")
 					Toast.makeText(now, estring, Toast.LENGTH_LONG).show();
 				
-				/*
+				
 				if (dleft == true)
 					Toast.makeText(now, "Detected left turn", Toast.LENGTH_SHORT).show();
 				if (dright == true)
 					Toast.makeText(now, "Detected right turn", Toast.LENGTH_SHORT).show();	
-				if (dturn == true)
-					Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
-				*/
+				//if (dturn == true)
+				//	Toast.makeText(now, "Detected a turn", Toast.LENGTH_SHORT).show();					
+				
 			}
 			
 			
