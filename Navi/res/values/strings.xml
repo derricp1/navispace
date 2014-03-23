@@ -3,6 +3,7 @@
 
     <string name="app_name">TCNJ BOOKNAV</string>
     <string name="input_message">Enter a Call Number</string>
+    <string name="input_message_2">(Optional) Enter a nearby book</string>
     <string name="button_send">Begin</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>

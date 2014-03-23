@@ -29,6 +29,14 @@
 	                android:layout_height="100dp"
 	                android:hint="@string/input_message" >
 	            </EditText>
+
+	        	<EditText
+	                android:id="@+id/input_message_2"
+	                android:layout_width="wrap_content"
+	                android:layout_height="100dp"
+	                android:layout_below="@id/input_message"
+	                android:hint="@string/input_message_2" >
+	            </EditText>	        
 	            
        			<Button
        			    android:id="@+id/sendButton"
@@ -45,7 +53,7 @@
                		android:layout_height="wrap_content"
                     android:layout_margin="10dp"
                     android:onClick="voiceup"
-                    android:layout_below="@id/input_message"
+                    android:layout_below="@id/input_message_2"
                     android:background="@drawable/check"
                     android:textOff="@string/voice_out"
                     android:textOn="@string/voice_in" />
@@ -55,8 +63,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="10dp"
-                    android:layout_below="@id/sendButton"
                   	android:layout_toRightOf="@+id/toggleButton2"
+                  	android:layout_below="@id/input_message_2"
                     android:src="@drawable/logo" />
                 
        			<ToggleButton
@@ -79,6 +87,27 @@
        			    android:layout_margin="10dp"
        			    android:background="@drawable/but"
        			    android:text="@string/help" />
+
+       			<EditText
+       			    android:id="@+id/EditText01"
+       			    android:layout_width="wrap_content"
+       			    android:layout_height="100dp"
+       			    android:layout_alignParentLeft="true"
+       			    android:layout_alignParentTop="true"
+       			    android:ems="10"
+       			    android:hint="@string/input_message" >
+
+       			    <requestFocus />
+       			</EditText>
+       			
+       			<EditText
+       			    android:id="@+id/EditText02"
+       			    android:layout_width="wrap_content"
+       			    android:layout_height="100dp"
+       			    android:ems="10"
+       			    android:layout_below="@+id/EditText01"      			 
+       			    android:hint="" >
+       			</EditText>
 		        		        
 		    </RelativeLayout>
 	    

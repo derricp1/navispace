@@ -40,7 +40,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	
 	Context now = this;
 	
-	boolean debug = false;
+	boolean debug = true;
 	
 	String estring = "";
 	int enumb = 0;
@@ -132,6 +132,9 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	public boolean orright;
 	public int rotation = 0;
 	
+	//start loc
+	int starget = -1;
+	
     //----------------------------------------------------------
     
     @SuppressLint("NewApi")
@@ -177,6 +180,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
         // Get the message from the intent
         Intent intent = getIntent();
         target = intent.getIntExtra(Main.EXTRA_MESSAGE, 0); //Will never need the default or it would not even get here. 0 is a choice though
+        starget = intent.getIntExtra(Main.START, -1);
         final boolean ztog = intent.getBooleanExtra(Main.ZOOM_LEVEL, false);
         final boolean voice = intent.getBooleanExtra(Main.VOICES, false);
         final boolean words = intent.getBooleanExtra(Main.WORDS, false);
@@ -754,6 +758,10 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					    		nextnode = resetarr[3];
 							}
 							
+							//Hardcode first location by node in other input
+							if (firstrun == true && starget >= 0) {
+								closestnode = starget;
+							}
 							
 							//Reset position here so that max time to actually use them
 							lockedx = 0;
