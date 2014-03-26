@@ -50,11 +50,11 @@ public class Main extends Activity {
 	public void sendMessage(View view) {
 		
 	    Intent intent = new Intent(this, LoadActivity.class); //Makes an intent to pass the user's node
-	    EditText editText = (EditText) findViewById(R.id.input_message);
+	    EditText editText = (EditText) findViewById(R.id.EditText01);
 	    String isbn = (editText.getText().toString()).toUpperCase(Locale.ENGLISH);
 	    
-	    EditText editText2 = (EditText) findViewById(R.id.input_message_2);
-	    String isbn2 = (editText.getText().toString()).toUpperCase(Locale.ENGLISH);
+	    EditText editText2 = (EditText) findViewById(R.id.EditText02);
+	    String isbn2 = (editText2.getText().toString()).toUpperCase(Locale.ENGLISH);
 
 	    /*---------------------------------------------------------------------
 	     * Call important information for start point
@@ -269,7 +269,7 @@ public class Main extends Activity {
 		    String isbnend2 = "";
 		    
 		    breakpoint = 0;
-		    chararray = isbn.toCharArray();
+		    chararray = isbn2.toCharArray();
 		    for (int q=0; q<isbn2.length(); q++) {
 		    	if (isbnchars2 == "" && Character.isDigit(chararray[q]) == true) {
 		    		isbnchars2 = isbn2.substring(0,q);
@@ -289,13 +289,13 @@ public class Main extends Activity {
 		    		}
 		    	}
 		    	if (isbnchars2 != "" && isbnnums2 != -1 && isbnend2 == "") {
-		    		isbnend2 = isbn.substring(q,isbn2.length());    		
+		    		isbnend2 = isbn2.substring(q,isbn2.length());    		
 		    	}
 		    }
 		    
 		    
 		    int starget = -1;
-		    cs = editText.getText();
+		    cs = editText2.getText();
 		    if (cs != null && cs.length() > 0) {
 		    	
 		    	if (loaded == false) {
@@ -452,6 +452,8 @@ public class Main extends Activity {
 		    -----------------------------------------------------------------------*/
 	    	
 	    	if (success == true) { //Will fail if user enters an invalid ISBN
+	    		Toast.makeText(this, target + " " + starget, Toast.LENGTH_SHORT).show();
+	    		
 			    intent.putExtra(EXTRA_MESSAGE, target); //Places the id number of the node of the shelf where the ISBN would be
 			    intent.putExtra(ZOOM_LEVEL, zlevel);
 			    intent.putExtra(VOICES, voices);

@@ -719,7 +719,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						}
 						//signal finding ends here
 						
-						if (maxmistakes >= 5) {
+						if (maxmistakes >= 99) { //should be 5
 							cancelled = true;
 							notav = true;
 							Drawable drawable = getResources().getDrawable(R.drawable.floorplan);
