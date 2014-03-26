@@ -40,7 +40,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	
 	Context now = this;
 	
-	boolean debug = true;
+	boolean debug = false;
 	
 	String estring = "";
 	int enumb = 0;
@@ -719,7 +719,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						}
 						//signal finding ends here
 						
-						if (maxmistakes >= 99) { //should be 5
+						if (maxmistakes >= 5) { //should be 5
 							cancelled = true;
 							notav = true;
 							Drawable drawable = getResources().getDrawable(R.drawable.floorplan);

@@ -452,7 +452,7 @@ public class Main extends Activity {
 		    -----------------------------------------------------------------------*/
 	    	
 	    	if (success == true) { //Will fail if user enters an invalid ISBN
-	    		Toast.makeText(this, target + " " + starget, Toast.LENGTH_SHORT).show();
+	    		//Toast.makeText(this, target + " " + starget, Toast.LENGTH_SHORT).show();
 	    		
 			    intent.putExtra(EXTRA_MESSAGE, target); //Places the id number of the node of the shelf where the ISBN would be
 			    intent.putExtra(ZOOM_LEVEL, zlevel);
