@@ -133,7 +133,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 	public int rotation = 0;
 	
 	//start loc
-	int starget = -1;
+	int starget;
 	
     //----------------------------------------------------------
     
@@ -141,6 +141,9 @@ public class LoadActivity extends Activity implements SensorEventListener {
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	super.onCreate(savedInstanceState);  	
+    	
+    	//may not need
+    	//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         
         //More sensor stuff
 		mInitialized = false;
@@ -760,7 +763,26 @@ public class LoadActivity extends Activity implements SensorEventListener {
 							
 							//Hardcode first location by node in other input
 							if (firstrun == true && starget >= 0) {
-								closestnode = starget;
+								
+								//make sure it matches floors
+								int yourfloor = 3;
+								if (targetnode < 234) {
+									yourfloor = 2;
+								}
+								if (targetnode > 383) {
+									yourfloor = 4;
+								}
+								int sfloor = 3;
+								if (starget < 234) {
+									yourfloor = 2;
+								}
+								if (starget > 383) {
+									yourfloor = 4;
+								}										
+								
+								if (sfloor == yourfloor) {
+									closestnode = starget;
+								}
 							}
 							
 							//Reset position here so that max time to actually use them
@@ -915,6 +937,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						        }
 
 						        double mult = 1;
+						        
 						        //we could toggle but there's the leak
 						        
 						        /* bitmap = ((BitmapDrawable)drawable).getBitmap();
@@ -968,8 +991,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 						        //Draw the image bitmap into the canvas
 						        
 						        tempCanvas.drawBitmap(newbitmap, 0, 0, null); */
-						        
-						       
 						        
 						        bitmap = ((BitmapDrawable)drawable).getBitmap();
 								
