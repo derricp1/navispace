@@ -15,9 +15,9 @@
     <string name="thanks">About</string>
     <string name="title_activity_about">About</string>
     <string name="hello_world">Hello world!</string>
-    <string name="aboutstring">TCNJ BookNav is a research project developed by Patrick D\'Errico to provide an interface for navigation among the TCNJ Library.</string>
-    <string name="specialthanks">Special thanks to:</string>
-    <string name="people">(INSERT PEOPLE HERE)</string>
+    <string name="aboutstring">TCNJ BookNav is a research project developed by Patrick D\'Errico to provide an interface for navigation among the TCNJ Library.\n</string>
+    <string name="specialthanks">Special thanks to:\n</string>
+    <string name="people">Dr. Deborah Knox\n\nDr. Jikai Li\n\nThe TCNJ Computer Science Department\n\nThe TCNJ Library Staff\n\nAll testers of the TCNJ BookNav\n\nYou</string>
     <string name="voice_in">Voice On</string>
     <string name="voice_out">Voice Off</string>
     <string name="word_in">Text On</string>
