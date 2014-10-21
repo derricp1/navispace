@@ -143,7 +143,7 @@ public class LoadActivity extends Activity implements SensorEventListener {
     	super.onCreate(savedInstanceState);  	
     	
     	//may not need
-    	//setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+    	setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
         
         //More sensor stuff
 		mInitialized = false;
@@ -306,7 +306,6 @@ public class LoadActivity extends Activity implements SensorEventListener {
 					ids[k] = s3[k];
 				}
 				break;
-			
 			}
 		}
 		catch (Exception e) {
